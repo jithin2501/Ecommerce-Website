@@ -1,6 +1,4 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { auth } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { authFetch } from '../utils/authFetch';
 
@@ -30,11 +28,15 @@ export function WishlistProvider({ children }) {
 
   // 2. Fetch wishlist from DB on login and merge/overwrite
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
+    const fetchWishlist = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+
+      if (token && userJson) {
+        const user = JSON.parse(userJson);
         wasLoggedIn.current = true;
         try {
-          const res = await authFetch(`/api/client-auth/profile/${user.uid}`);
+          const res = await authFetch(`/api/client-auth/profile/${user.customerId}`);
           const data = await res.json();
           if (data.success && data.user) {
             const dbWishlist = (data.user.wishlist || []).map(item => ({
@@ -42,14 +44,12 @@ export function WishlistProvider({ children }) {
               id: item.productId || item._id || item.id
             }));
             
-            // MERGE LOGIC: Combine local items with DB items to prevent data loss
+            // MERGE LOGIC
             setWishlist(prev => {
               const merged = [...dbWishlist];
               prev.forEach(localItem => {
                 const alreadyExists = merged.some(dbItem => dbItem.id === localItem.id);
-                if (!alreadyExists) {
-                  merged.push(localItem);
-                }
+                if (!alreadyExists) merged.push(localItem);
               });
               return merged;
             });
@@ -60,7 +60,6 @@ export function WishlistProvider({ children }) {
           setIsLoaded(true);
         }
       } else {
-        // If transitioning from logged in to logged out, clear the wishlist
         if (wasLoggedIn.current) {
           setWishlist([]);
           localStorage.removeItem(STORAGE_KEY);
@@ -68,15 +67,17 @@ export function WishlistProvider({ children }) {
         }
         setIsLoaded(true);
       }
-    });
-    return () => unsub();
+    };
+
+    fetchWishlist();
   }, []);
 
   // 3. Sync wishlist to DB whenever it changes (only for logged in users)
   useEffect(() => {
-    const user = auth.currentUser;
-    // CRITICAL: We only sync if we are logged in AND the initial fetch has finished.
-    if (!user || !isLoaded) return;
+    const token = localStorage.getItem('clientToken');
+    const userJson = localStorage.getItem('clientUser');
+    if (!token || !userJson || !isLoaded) return;
+    const user = JSON.parse(userJson);
 
     const syncTimeout = setTimeout(async () => {
       try {
@@ -91,19 +92,22 @@ export function WishlistProvider({ children }) {
         await authFetch('/api/client-auth/sync-wishlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uid: user.uid, wishlist: syncData })
+          body: JSON.stringify({ uid: user.customerId, wishlist: syncData })
         });
       } catch (err) {
         console.error('Failed to sync wishlist:', err);
       }
-    }, 1500); // 1.5s debounce to avoid flickering
+    }, 1500);
 
     return () => clearTimeout(syncTimeout);
   }, [wishlist, isLoaded]);
 
   const triggerImmediateSync = async (newWishlist) => {
-    const user = auth.currentUser;
-    if (!user) return;
+    const token = localStorage.getItem('clientToken');
+    const userJson = localStorage.getItem('clientUser');
+    if (!token || !userJson) return;
+    const user = JSON.parse(userJson);
+
     try {
       const syncData = newWishlist.map(item => ({
         productId: item.id || item._id,
@@ -115,7 +119,7 @@ export function WishlistProvider({ children }) {
       await authFetch('/api/client-auth/sync-wishlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid, wishlist: syncData })
+        body: JSON.stringify({ uid: user.customerId, wishlist: syncData })
       });
     } catch (err) {
       console.error('Failed to immediate sync wishlist:', err);
@@ -123,7 +127,8 @@ export function WishlistProvider({ children }) {
   };
 
   const toggleWishlist = (product) => {
-    if (!auth.currentUser) {
+    const token = localStorage.getItem('clientToken');
+    if (!token) {
       alert("Please login to add products to your wishlist");
       navigate('/login');
       return;

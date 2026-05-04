@@ -1,3 +1,5 @@
+const ClientUser = require('../models/ClientUser');
+const ProductReview = require('../models/ProductReview');
 const jwt = require('jsonwebtoken');
 
 const signToken = (id) => {
@@ -14,9 +16,10 @@ async function nextCustomerId() {
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    const normalizedEmail = email.toLowerCase();
 
     // Check if user already exists
-    const existingUser = await ClientUser.findOne({ email });
+    const existingUser = await ClientUser.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ error: 'Email already registered' });
     }
@@ -24,7 +27,7 @@ exports.register = async (req, res) => {
     const customerId = await nextCustomerId();
     const user = await ClientUser.create({
       name,
-      email,
+      email: normalizedEmail,
       password,
       customerId,
       uids: [customerId], // Using customerId as a fallback for the old UID logic
@@ -56,17 +59,28 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: 'Please provide email and password' });
     }
 
-    // Find user and explicitly select password
-    const user = await ClientUser.findOne({ email }).select('+password');
+    console.log(`🔑 Attempting login for: ${email}`);
 
-    if (!user || !(await user.correctPassword(password, user.password))) {
+    // Find user and explicitly select password (lowercase email for matching)
+    const user = await ClientUser.findOne({ email: email.toLowerCase() }).select('+password');
+
+    if (!user) {
+      console.log('❌ User not found in database');
+      return res.status(401).json({ error: 'Incorrect email or password' });
+    }
+
+    const isMatch = await user.correctPassword(password, user.password);
+    console.log(`Match result: ${isMatch}`);
+
+    if (!isMatch) {
+      console.log('❌ Password does not match');
       return res.status(401).json({ error: 'Incorrect email or password' });
     }
 
     const token = signToken(user._id);
-
-    // Remove password from output
     user.password = undefined;
+
+    console.log('✅ Login successful');
 
     res.json({
       success: true,

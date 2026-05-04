@@ -1,8 +1,6 @@
 import { ShoppingCart, User, LogIn, Menu, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '../../firebase';
 import { useCart } from '../../context/CartContext';
 import '../../styles/navbar/Navbar.css';
 
@@ -80,12 +78,22 @@ export default function Navbar() {
   }, [location.pathname]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+    const checkUser = () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+      if (token && userJson) {
+        setUser(JSON.parse(userJson));
+      } else {
+        setUser(null);
+      }
       setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    };
+
+    checkUser();
+    // Listen for changes (e.g. on login/logout)
+    window.addEventListener('storage', checkUser);
+    return () => window.removeEventListener('storage', checkUser);
+  }, [location.pathname]); // Re-check when route changes
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -177,9 +185,11 @@ export default function Navbar() {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
+    localStorage.removeItem('clientToken');
+    localStorage.removeItem('clientUser');
     localStorage.removeItem('sumathi_selected_address');
+    setUser(null);
     setShowDropdown(false);
     navigate('/');
   };
@@ -224,7 +234,7 @@ export default function Navbar() {
                 {showDropdown && (
                   <div className="account-dropdown">
                     <div className="dropdown-user-info">
-                      <p className="dropdown-name">{user.displayName || 'User'}</p>
+                      <p className="dropdown-name">{user.name || 'User'}</p>
                       <p className="dropdown-email">{user.email}</p>
                     </div>
                     <hr className="dropdown-divider" />
@@ -291,7 +301,7 @@ export default function Navbar() {
             user ? (
               <>
                 <div className="sidebar-user-info">
-                  <p className="sidebar-name">{user.displayName || 'User'}</p>
+                  <p className="sidebar-name">{user.name || 'User'}</p>
                   <p className="sidebar-email">{user.email}</p>
                 </div>
                 <Link to="/account" className="sidebar-action-item" onClick={() => setIsSidebarOpen(false)}>

@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import '../../styles/myorders/MyOrders.css';
 
 function StatusBadge({ status, label }) {
@@ -26,12 +24,15 @@ export default function MyOrders() {
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
+    const fetchOrders = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+
+      if (token && userJson) {
+        const user = JSON.parse(userJson);
+        setUser(user);
         try {
-          const token = await firebaseUser.getIdToken();
-          const res = await fetch(`/api/payment/user-orders/${firebaseUser.uid}`, {
+          const res = await fetch(`/api/payment/user-orders/${user.customerId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const data = await res.json();
@@ -46,8 +47,9 @@ export default function MyOrders() {
       } else {
         navigate('/login');
       }
-    });
-    return () => unsub();
+    };
+
+    fetchOrders();
   }, [navigate]);
 
   if (loading) {

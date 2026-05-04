@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/sidebar/Sidebar';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { authFetch } from '../../utils/authFetch';
 import '../../styles/personinformation/AccountHub.css';
 
@@ -25,20 +23,33 @@ export default function AccountHub() {
   // ─────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const res  = await authFetch(`/api/client-auth/profile/${user.uid}`);
-          const data = await res.json();
-          if (data.success) setDbUser(data.user);
-        } catch (err) {
-          console.error('AccountHub: failed to load user', err);
+    const fetchUser = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+
+      if (!token || !userJson) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const user = JSON.parse(userJson);
+        const res = await authFetch(`/api/client-auth/profile/${user.customerId}`);
+        const data = await res.json();
+        if (data.success) {
+          setDbUser(data.user);
+        } else {
+          localStorage.removeItem('clientToken');
+          localStorage.removeItem('clientUser');
+          navigate('/login');
         }
-      } else {
+      } catch (err) {
+        console.error('AccountHub: failed to load user', err);
         navigate('/login');
       }
-    });
-    return () => unsub();
+    };
+
+    fetchUser();
   }, [navigate]);
 
   return (

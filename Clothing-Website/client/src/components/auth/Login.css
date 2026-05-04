@@ -361,6 +361,28 @@
   text-decoration: underline;
 }
 
+/* ── Footer ── */
+.ul-footer {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.ul-link {
+  color: #2D3E50;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: color 0.2s ease;
+}
+
+.ul-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
 /* ── Responsive ── */
 @media (max-width: 850px) {
   .ul-container {

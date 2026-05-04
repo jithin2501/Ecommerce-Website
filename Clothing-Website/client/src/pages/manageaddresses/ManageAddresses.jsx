@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/sidebar/Sidebar';
 import '../../styles/manageaddresses/ManageAddresses.css';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { authFetch } from '../../utils/authFetch';
 
 const INDIAN_STATES = [
@@ -57,11 +55,15 @@ export default function ManageAddresses() {
   const [validatingPin, setValidatingPin] = useState(false);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUserUid(user.uid);
+    const fetchAddresses = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+
+      if (token && userJson) {
+        const user = JSON.parse(userJson);
+        setUserUid(user.customerId);
         try {
-          const res = await authFetch(`/api/client-auth/addresses/${user.uid}`);
+          const res = await authFetch(`/api/client-auth/addresses/${user.customerId}`);
           const data = await res.json();
           if (data.success) setAddresses_(data.addresses || []);
         } catch (err) {
@@ -75,8 +77,9 @@ export default function ManageAddresses() {
         } catch { setAddresses_([]); }
       }
       setLoading(false);
-    });
-    return () => unsub();
+    };
+
+    fetchAddresses();
   }, []);
 
   if (loading) {
