@@ -3,7 +3,6 @@ const router = express.Router();
 const multer  = require('multer');
 const productCtrl = require('../controllers/productController');
 const { protect } = require('../middleware/authMiddleware');
-const { uploadToS3, deleteFromS3 } = require('../conf/s3');
 
 // ── Multer Setup ──
 const storage = multer.memoryStorage();

@@ -29,7 +29,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     useDefaults: true,
     directives: {
-      "img-src": ["'self'", "data:", "https://sumathi-trends.s3.ap-south-1.amazonaws.com", "https://lh3.googleusercontent.com"],
+      "img-src": ["'self'", "data:", "https://res.cloudinary.com", "https://sumathi-trends.s3.ap-south-1.amazonaws.com", "https://lh3.googleusercontent.com"],
+      "media-src": ["'self'", "https://res.cloudinary.com", "https://sumathi-trends.s3.ap-south-1.amazonaws.com"],
       "script-src": ["'self'", "'unsafe-inline'", "https://checkout.razorpay.com"],
       "frame-src": ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"],
       "connect-src": ["'self'", "https://api.razorpay.com", "https://lumberjack-cx.razorpay.com"],

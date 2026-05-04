@@ -1,21 +1,10 @@
+const { uploadToCloudinary } = require('../conf/cloudinary');
 const SupportIssue = require('../models/SupportIssue');
 const ClientUser = require('../models/ClientUser');
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
-const { s3 } = require('../conf/s3');
-const BUCKET = process.env.AWS_S3_BUCKET;
-const REGION = process.env.AWS_REGION;
 
+// Helper to use Cloudinary instead of S3
 const uploadSupportFile = async (file) => {
-  const ext = file.originalname.split('.').pop();
-  const key = `support/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  await s3.send(new PutObjectCommand({
-    Bucket: BUCKET,
-    Key: key,
-    Body: file.buffer,
-    ContentType: file.mimetype,
-    ContentDisposition: 'inline',
-  }));
-  return `https://s3.${REGION}.amazonaws.com/${BUCKET}/${key}`;
+  return await uploadToCloudinary(file, 'support');
 };
 
 exports.submitSupportIssue = async (req, res) => {

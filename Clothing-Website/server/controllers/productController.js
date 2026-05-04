@@ -1,6 +1,6 @@
 const Product = require('../models/Product');
 const SiteSettings = require('../models/SiteSettings');
-const { uploadToS3, deleteFromS3 } = require('../conf/s3');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../conf/cloudinary');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -146,7 +146,7 @@ const createProduct = async (req, res) => {
     }
 
     const parsedStock = stock !== undefined ? Number(stock) : 0;
-    const imgUrl = await uploadToS3(req.file, ageGroup[0] || 'other');
+    const imgUrl = await uploadToCloudinary(req.file, ageGroup[0] || 'other');
 
     const product = await Product.create({
       name,
@@ -165,6 +165,7 @@ const createProduct = async (req, res) => {
 
     res.json({ success: true, data: normaliseInventory(product.toObject()) });
   } catch (err) {
+    console.error('❌ createProduct error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -206,9 +207,9 @@ const updateProduct = async (req, res) => {
     }
 
     if (req.file) {
-      await deleteFromS3(product.img);
+      await deleteFromCloudinary(product.img);
       const parsedAgeGroup = ageGroup !== undefined ? parseArrayField(ageGroup) : product.ageGroup;
-      product.img = await uploadToS3(req.file, parsedAgeGroup[0] || product.ageGroup[0] || 'other');
+      product.img = await uploadToCloudinary(req.file, parsedAgeGroup[0] || product.ageGroup[0] || 'other');
     }
 
     await product.save();
@@ -224,7 +225,7 @@ const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ success: false });
-    await deleteFromS3(product.img);
+    await deleteFromCloudinary(product.img);
     res.json({ success: true });
   } catch {
     res.status(500).json({ success: false });

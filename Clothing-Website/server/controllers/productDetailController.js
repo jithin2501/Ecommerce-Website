@@ -1,7 +1,7 @@
 // ── controllers/productDetailController.js ──
 const ProductDetail = require('../models/ProductDetail');
 const Product       = require('../models/Product');
-const { uploadToS3, deleteFromS3 } = require('../conf/s3');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../conf/cloudinary');
 
 /* ─────────────────────────────────────────────
    GET /api/product-details/:productId   (public)
@@ -77,7 +77,7 @@ const upsertProductDetail = async (req, res) => {
       for (let i = 0; i < 7; i++) {
         const field = `colorImg_${cName}_${i}`;
         if (req.files && req.files[field] && req.files[field][0]) {
-          const url = await uploadToS3(req.files[field][0], product.ageGroup);
+          const url = await uploadToCloudinary(req.files[field][0], product.ageGroup);
           images.push(url);
         } else if (existingUrls[i]) {
           images.push(existingUrls[i]);
@@ -90,7 +90,7 @@ const upsertProductDetail = async (req, res) => {
         if (oldEntry) {
           for (let i = 0; i < 7; i++) {
             if (oldEntry.images[i] && oldEntry.images[i] !== images[i]) {
-              await deleteFromS3(oldEntry.images[i]).catch(() => {});
+              await deleteFromCloudinary(oldEntry.images[i]).catch(() => {});
             }
           }
         }
@@ -107,7 +107,7 @@ const upsertProductDetail = async (req, res) => {
     for (let i = 0; i < 7; i++) {
       const fileField = `image_${i}`;
       if (req.files && req.files[fileField] && req.files[fileField][0]) {
-        const url = await uploadToS3(req.files[fileField][0], product.ageGroup);
+        const url = await uploadToCloudinary(req.files[fileField][0], product.ageGroup);
         galleryImages.push(url);
       } else if (existingUrls[i]) {
         galleryImages.push(existingUrls[i]);
@@ -128,7 +128,7 @@ const upsertProductDetail = async (req, res) => {
       for (let i = 0; i < 7; i++) {
         const oldUrl = existing.galleryImages[i];
         if (oldUrl && oldUrl !== finalGallery[i]) {
-          await deleteFromS3(oldUrl).catch(() => {});
+          await deleteFromCloudinary(oldUrl).catch(() => {});
         }
       }
     }
@@ -172,7 +172,7 @@ const deleteProductDetail = async (req, res) => {
 
     // Clean up all gallery images from S3
     for (const url of detail.galleryImages) {
-      await deleteFromS3(url).catch(() => {});
+      await deleteFromCloudinary(url).catch(() => {});
     }
 
     res.json({ success: true });

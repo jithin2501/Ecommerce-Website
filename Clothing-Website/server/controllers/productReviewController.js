@@ -1,29 +1,11 @@
 // controllers/productReviewController.js
 // Handles delivery reviews — linked to product, order, and user
-// Files uploaded to S3. Auto-approved on submit.
+// Files uploaded to Cloudinary. Auto-approved on submit.
 
+const { uploadToCloudinary } = require('../conf/cloudinary');
 const ProductReview = require('../models/ProductReview');
 const Product = require('../models/Product');
 const mongoose = require('mongoose');
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
-const { s3 } = require('../conf/s3');
-
-const BUCKET = process.env.AWS_S3_BUCKET;
-const REGION = process.env.AWS_REGION;
-
-// ── S3 Upload Helper ──
-const uploadFile = async (file) => {
-    const ext = file.originalname.split('.').pop();
-    const key = `reviews/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    await s3.send(new PutObjectCommand({
-        Bucket: BUCKET,
-        Key: key,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-        ContentDisposition: 'inline',
-    }));
-    return `https://s3.${REGION}.amazonaws.com/${BUCKET}/${key}`;
-};
 
 // ── Update product's aggregate star rating ──
 const updateProductStats = async (productId) => {
@@ -59,12 +41,11 @@ exports.submitProductReview = async (req, res) => {
         if (req.files?.length > 0) {
             for (const file of req.files) {
                 try {
-                    const url = await uploadFile(file);
+                    const url = await uploadToCloudinary(file, 'reviews');
                     if (file.mimetype.startsWith('video/')) video = url;
                     else images.push(url);
                 } catch (uploadErr) {
-                    console.error('S3 upload failed:', file.originalname, uploadErr.message);
-                    // Continue — don't crash the whole review if one file fails
+                    console.error('Cloudinary upload failed:', file.originalname, uploadErr.message);
                 }
             }
         }
