@@ -51,6 +51,7 @@ const OrderManagement = lazy(() => import('./admin/views/OrderManagement'));
 const SupportManagement = lazy(() => import('./admin/views/SupportManagement'));
 const Login = lazy(() => import('./admin/login/Login'));
 const UserLogin = lazy(() => import('./components/auth/Login'));
+const UserSignup = lazy(() => import('./components/auth/Signup'));
 
 import ProtectedRoute from './admin/login/Protectedroute';
 
@@ -118,6 +119,7 @@ function App() {
             <Routes>
               {/* Client login — no Navbar/Footer */}
               <Route path="/login" element={<UserLogin />} />
+              <Route path="/signup" element={<UserSignup />} />
 
               {/* Admin login */}
               <Route path="/admin/login" element={<Login />} />

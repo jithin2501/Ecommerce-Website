@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/sidebar/Sidebar';
 import '../../styles/personinformation/PersonInformation.css';
-import { auth } from '../../firebase';
-import { onAuthStateChanged, signOut, deleteUser as deleteFirebaseUser } from 'firebase/auth';
 import { authFetch } from '../../utils/authFetch';
 
 export default function PersonInformation() {
@@ -40,41 +38,62 @@ export default function PersonInformation() {
   const [savingMobile, setSavingMobile] = useState(false);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const res = await authFetch(`/api/client-auth/profile/${user.uid}`);
-          const data = await res.json();
-          if (data.success) {
-            setDbUser(data.user);
-            const nameParts = (data.user.name || '').split(' ');
-            setFirstName(nameParts[0] || '');
-            setLastName(nameParts.slice(1).join(' ') || '');
-            setGender(data.user.gender || '');
-            setEmail(data.user.email || '');
-            let ph = (data.user.phone || '').replace('+91', '');
-            setMobile(ph);
-          }
-        } catch (err) {
-          console.error("Failed to fetch profile", err);
-        }
-      } else {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+      
+      if (!token || !userJson) {
         navigate('/login');
+        return;
       }
-      setLoadingProfile(false);
-    });
-    return () => unsub();
+
+      try {
+        const user = JSON.parse(userJson);
+        const res = await authFetch(`/api/client-auth/profile/${user.customerId}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          setDbUser(data.user);
+          const nameParts = (data.user.name || '').split(' ');
+          setFirstName(nameParts[0] || '');
+          setLastName(nameParts.slice(1).join(' ') || '');
+          setGender(data.user.gender || '');
+          setEmail(data.user.email || '');
+          let ph = (data.user.phone || '').replace('+91', '');
+          setMobile(ph);
+        } else {
+          // Token might be expired
+          localStorage.removeItem('clientToken');
+          localStorage.removeItem('clientUser');
+          navigate('/login');
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+        navigate('/login');
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
   }, [navigate]);
 
   const updateProfileData = async (updates) => {
-    if (!auth.currentUser) return;
+    const userJson = localStorage.getItem('clientUser');
+    if (!userJson) return;
+    const user = JSON.parse(userJson);
+
     try {
-      await authFetch(`/api/client-auth/profile/${auth.currentUser.uid}`, {
+      const res = await authFetch(`/api/client-auth/profile/${user.customerId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      setDbUser(prev => ({ ...prev, ...updates }));
+      const data = await res.json();
+      if (data.success) {
+        setDbUser(data.user);
+        localStorage.setItem('clientUser', JSON.stringify(data.user));
+      }
     } catch (err) {
       console.error("Update failed", err);
     }
@@ -112,15 +131,7 @@ export default function PersonInformation() {
   const handleSaveMobile = async () => {
     setSavingMobile(true);
     if (mobile.length === 10 && mobile !== tempMobile) {
-      // If user has an email (Google login etc.), allow adding/changing phone directly
-      if (dbUser?.email || dbUser?.loginType === 'google') {
-        await updateProfileData({ phone: `+91${mobile}` });
-      } else {
-        alert("For security, updating a phone number requires Re-Authentication.");
-        await signOut(auth);
-        navigate('/login');
-        return;
-      }
+      await updateProfileData({ phone: `+91${mobile}` });
     } else if (mobile.length > 0 && mobile.length < 10) {
       alert("Please enter a valid 10-digit number");
       setSavingMobile(false);
@@ -130,14 +141,21 @@ export default function PersonInformation() {
     setEditingMobile(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('clientToken');
+    localStorage.removeItem('clientUser');
+    navigate('/login');
+  };
+
   const handleDeleteAccount = async () => {
     if (window.confirm("Are you SURE you want to permanently delete your account? This action cannot be undone.")) {
-      if (!auth.currentUser) return;
+      const userJson = localStorage.getItem('clientUser');
+      if (!userJson) return;
+      const user = JSON.parse(userJson);
+
       try {
-        await authFetch(`/api/client-auth/delete/${auth.currentUser.uid}`, { method: 'DELETE' });
-        try { await deleteFirebaseUser(auth.currentUser); } catch (e) { console.warn("Firebase user deletion required recent login.", e); }
-        await signOut(auth);
-        navigate('/');
+        await authFetch(`/api/client-auth/delete/${user.customerId}`, { method: 'DELETE' });
+        handleLogout();
       } catch (err) {
         console.error("Delete failed", err);
       }
@@ -145,7 +163,6 @@ export default function PersonInformation() {
   };
 
   // Match main panel height to sidebar — desktop only
-  // Re-runs when dbUser loads so sidebar is fully rendered before measuring
   useEffect(() => {
     const el = sidebarRef.current;
     if (!el) return;
@@ -153,7 +170,6 @@ export default function PersonInformation() {
       if (window.innerWidth > 768) setMainHeight(el.offsetHeight);
       else setMainHeight(null);
     };
-    // Small timeout to let sidebar finish painting after data load
     const timer = setTimeout(update, 50);
     const ro = new ResizeObserver(update);
     ro.observe(el);
@@ -173,7 +189,6 @@ export default function PersonInformation() {
   return (
     <div className="pi-page">
       <div className="pi-container">
-
         <div ref={sidebarRef}>
           <Sidebar
             activeNav={activeNav}
@@ -185,8 +200,6 @@ export default function PersonInformation() {
         </div>
 
         <main className="main-content" style={mainHeight ? { height: mainHeight + 'px' } : {}}>
-
-          {/* Combined Header with back button for phone view */}
           <div className="pi-mobile-header">
             <button className="mobile-back-btn" onClick={() => navigate('/account')}>
             </button>
@@ -197,13 +210,10 @@ export default function PersonInformation() {
           </div>
 
           <div className="pi-scrollable">
-
             {/* Personal Info Card */}
             <div className="form-card">
               <div className="form-card-header">
-                <div className="card-title">
-                  Name
-                </div>
+                <div className="card-title">Name</div>
                 {!editingPersonal
                   ? <span className="edit-btn" onClick={handleEditPersonal}>Edit</span>
                   : <span className="edit-cancel" onClick={handleCancelPersonal}>Cancel</span>
@@ -267,9 +277,7 @@ export default function PersonInformation() {
             {/* Email Card */}
             <div className="form-card">
               <div className="form-card-header">
-                <div className="card-title">
-                  Email Address
-                </div>
+                <div className="card-title">Email Address</div>
                 {!editingEmail
                   ? <span className="edit-btn" onClick={handleEditEmail}>Edit</span>
                   : <span className="edit-cancel" onClick={handleCancelEmail}>Cancel</span>
@@ -299,9 +307,7 @@ export default function PersonInformation() {
             {/* Mobile Card */}
             <div className="form-card">
               <div className="form-card-header">
-                <div className="card-title">
-                  Mobile Number
-                </div>
+                <div className="card-title">Mobile Number</div>
                 {!editingMobile
                   ? <span className="edit-btn" onClick={handleEditMobile}>Edit</span>
                   : <span className="edit-cancel" onClick={handleCancelMobile}>Cancel</span>
@@ -332,9 +338,11 @@ export default function PersonInformation() {
             <div className="delete-account-wrapper">
               <span className="delete-account" onClick={handleDeleteAccount} style={{ cursor: 'pointer' }}>Delete Account</span>
             </div>
-
-          </div>{/* end pi-scrollable */}
-
+            
+            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+              <button onClick={handleLogout} className="btn-save" style={{ backgroundColor: '#ff4444' }}>LOGOUT</button>
+            </div>
+          </div>
         </main>
       </div>
     </div>

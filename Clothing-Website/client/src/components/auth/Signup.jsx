@@ -1,27 +1,27 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../SEO';
-import './Login.css';
+import './Login.css'; // Reusing Login styles for consistency
 
-export default function Login() {
+export default function Signup() {
   const navigate = useNavigate();
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ text: '', type: '' });
 
     try {
-      const res = await fetch('/api/client-auth/login', {
+      const res = await fetch('/api/client-auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await res.json();
@@ -29,47 +29,35 @@ export default function Login() {
       if (data.success) {
         localStorage.setItem('clientToken', data.token);
         localStorage.setItem('clientUser', JSON.stringify(data.user));
-        navigate('/');
+        setMessage({ text: 'Account created successfully!', type: 'success' });
+        setTimeout(() => navigate('/'), 1500);
       } else {
-        setMessage({ text: data.error || 'Login failed', type: 'error' });
+        setMessage({ text: data.error || 'Registration failed', type: 'error' });
       }
     } catch (err) {
-      console.error("❌ Login FAILED:", err);
+      console.error("❌ Signup FAILED:", err);
       setMessage({ text: 'Network error. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
-    setMessage({ text: 'Google Login is disabled. Please use Email/Password.', type: 'error' });
-  };
-
   return (
     <div className="ul-page">
-      <SEO 
-        title="Login" 
-        description="Login to your Sumathi Trends account to manage your orders, addresses, and wishlist."
-      />
+      <SEO title="Sign Up" description="Create a Sumathi Trends account to start shopping." />
 
       <div className="ul-container">
-
         <div className="ul-image-section">
-          <button className="ul-back-btn" onClick={() => navigate('/')} title="Back to Home">
+          <button className="ul-back-btn" onClick={() => navigate('/login')} title="Back to Login">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <img
-            src="/images/login/client_login.png"
-            alt="Login Illustration"
-            onError={(e) => { e.target.style.display = 'none'; }}
-          />
+          <img src="/images/login/client_login.png" alt="Signup Illustration" />
         </div>
 
         <div className="ul-form-section">
-
           {message.text && (
             <div className={`ul-message ${message.type === 'success' ? 'ul-msg-success' : 'ul-msg-error'}`}>
               {message.text}
@@ -77,11 +65,23 @@ export default function Login() {
           )}
 
           <div className="ul-header">
-            <h1>Welcome back</h1>
-            <p>Please log into your account</p>
+            <h1>Create Account</h1>
+            <p>Join Sumathi Trends today</p>
           </div>
 
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleSignup}>
+            <div className="ul-form-group">
+              <label htmlFor="name">Full Name</label>
+              <input
+                type="text"
+                id="name"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+
             <div className="ul-form-group">
               <label htmlFor="email">Email Address</label>
               <input
@@ -106,35 +106,14 @@ export default function Login() {
               />
             </div>
 
-            <button
-              type="submit"
-              className="ul-btn-signin"
-              disabled={loading}
-            >
-              {loading ? 'Signing in…' : 'Sign In'}
+            <button type="submit" className="ul-btn-signin" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Sign Up'}
             </button>
           </form>
 
-          <div className="ul-divider">or</div>
-
-          <button
-            className="ul-btn-google"
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-          >
-            <svg viewBox="0 0 48 48" width="18" height="18">
-              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z" />
-              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-            </svg>
-            Sign in with Google
-          </button>
-          
           <div className="ul-footer">
-            Don't have an account? <span className="ul-link" onClick={() => navigate('/signup')}>Sign Up</span>
+            Already have an account? <span className="ul-link" onClick={() => navigate('/login')}>Sign In</span>
           </div>
-
         </div>
       </div>
     </div>
