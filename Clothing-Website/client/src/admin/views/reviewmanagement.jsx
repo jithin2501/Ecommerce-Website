@@ -13,6 +13,7 @@ export default function ReviewManagement() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [autoApprove, setAutoApprove] = useState(false);
   const [msg, setMsg] = useState({ text: '', type: '' });
   const navigate = useNavigate();
 
@@ -28,7 +29,21 @@ export default function ReviewManagement() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchReviews(); }, []);
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch(`${API}/admin/settings`, { 
+        headers: authHeaders(),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) setAutoApprove(data.autoApprove);
+    } catch { console.error('Failed to load settings'); }
+  };
+
+  useEffect(() => { 
+    fetchReviews(); 
+    fetchSettings();
+  }, []);
 
   const flash = (text, type = 'success') => {
     setMsg({ text, type });
@@ -70,6 +85,30 @@ export default function ReviewManagement() {
       const data = await res.json();
       if (data.success) setReviews(r => r.filter(x => x._id !== id));
     } catch { flash('Server error.', 'error'); }
+  };
+
+  const toggleAutoApprove = async () => {
+    const newVal = !autoApprove;
+    // Optimistic UI
+    setAutoApprove(newVal);
+    try {
+      const res = await fetch(`${API}/admin/settings`, { 
+        method: 'PATCH', 
+        headers: authHeaders(),
+        body: JSON.stringify({ autoApprove: newVal }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setAutoApprove(!newVal);
+        flash('Failed to update setting.', 'error');
+      } else {
+        flash(`Auto-approve ${newVal ? 'Enabled' : 'Disabled'}`);
+      }
+    } catch { 
+      setAutoApprove(!newVal);
+      flash('Server error.', 'error'); 
+    }
   };
 
   const filtered = filter === 'all'
@@ -123,17 +162,31 @@ export default function ReviewManagement() {
         </div>
       )}
 
-      {/* ── Filter tabs ── */}
-      <div className="rm-filters">
-        {['all', 'pending', 'approved'].map(f => (
-          <button
-            key={f}
-            className={`rm-filter-btn${filter === f ? ' active' : ''}`}
-            onClick={() => setFilter(f)}
-          >
-            {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
-          </button>
-        ))}
+      {/* ── Toolbar with Filters + Auto-Approve Toggle ── */}
+      <div className="rm-toolbar">
+        <div className="rm-filters">
+          {['all', 'pending', 'approved'].map(f => (
+            <button
+              key={f}
+              className={`rm-filter-btn${filter === f ? ' active' : ''}`}
+              onClick={() => setFilter(f)}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f]})
+            </button>
+          ))}
+        </div>
+
+        <div className="rm-toggle-wrap" onClick={toggleAutoApprove}>
+          <span className="rm-toggle-label">Auto-Approve QR Reviews</span>
+          <label className="rm-switch" onClick={e => e.stopPropagation()}>
+            <input 
+              type="checkbox" 
+              checked={autoApprove} 
+              onChange={toggleAutoApprove}
+            />
+            <span className="rm-slider"></span>
+          </label>
+        </div>
       </div>
 
       {/* ── Reviews table ── */}

@@ -2,6 +2,7 @@
 // Handles QR code reviews — no files, no product link, admin approval required
 
 const QRReview = require('../models/QRReview');
+const SiteSettings = require('../models/SiteSettings');
 
 // POST /api/qr-reviews/submit — public (called by ReviewSubmit.jsx)
 exports.submitQRReview = async (req, res) => {
@@ -12,11 +13,17 @@ exports.submitQRReview = async (req, res) => {
         if (rating < 1 || rating > 5)
             return res.status(400).json({ success: false, message: 'Rating must be 1–5.' });
 
+        // Check auto-approve setting
+        let settings = await SiteSettings.findOne();
+        if (!settings) {
+            settings = await SiteSettings.create({ autoApproveQRReviews: false });
+        }
+
         const review = await QRReview.create({
             name: name.trim(),
             rating: Number(rating),
             message: message.trim(),
-            status: 'pending',
+            status: settings.autoApproveQRReviews ? 'approved' : 'pending',
         });
 
         res.json({ success: true, data: review });
@@ -82,6 +89,37 @@ exports.getApprovedQRReviews = async (req, res) => {
     try {
         const reviews = await QRReview.find({ status: 'approved' }).sort({ createdAt: -1 });
         res.json({ success: true, data: reviews });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+};
+
+// GET /api/qr-reviews/admin/settings — admin
+exports.getQRSettings = async (req, res) => {
+    try {
+        let settings = await SiteSettings.findOne();
+        if (!settings) {
+            settings = await SiteSettings.create({ autoApproveQRReviews: false });
+        }
+        res.json({ success: true, autoApprove: settings.autoApproveQRReviews });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+};
+
+// PATCH /api/qr-reviews/admin/settings — admin
+exports.toggleQRAutoApprove = async (req, res) => {
+    try {
+        const { autoApprove } = req.body;
+        let settings = await SiteSettings.findOne();
+        if (!settings) {
+            settings = await SiteSettings.create({ autoApproveQRReviews: autoApprove });
+        } else {
+            settings.autoApproveQRReviews = autoApprove;
+            settings.lastUpdated = Date.now();
+            await settings.save();
+        }
+        res.json({ success: true, autoApprove: settings.autoApproveQRReviews });
     } catch (err) {
         res.status(500).json({ success: false });
     }

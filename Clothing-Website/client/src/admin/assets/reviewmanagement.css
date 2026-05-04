@@ -110,6 +110,84 @@
 .rm-filter-btn:hover { border-color: #2D3E50; color: #2D3E50; }
 .rm-filter-btn.active { background: #2D3E50; border-color: #2D3E50; color: #fff; }
 
+/* ── Toolbar & Auto-Approve Toggle ── */
+.rm-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.rm-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  padding: 6px 14px;
+  border-radius: 25px;
+  border: 1.5px solid #e5e7eb;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+
+.rm-toggle-wrap:hover {
+  border-color: #2D3E50;
+}
+
+.rm-toggle-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.rm-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.rm-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.rm-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 20px;
+}
+
+.rm-slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+.rm-switch input:checked + .rm-slider {
+  background-color: #16a34a;
+}
+
+.rm-switch input:checked + .rm-slider:before {
+  transform: translateX(16px);
+}
+
 /* ── Table ── */
 .rm-table-outer {
   background: #fff;

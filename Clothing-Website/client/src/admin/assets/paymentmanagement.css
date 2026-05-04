@@ -544,6 +544,7 @@
 
 /* ── Bottom Rows Full ── */
 .dash-bottom-row-full {
+  margin-top: 2rem;
   margin-bottom: 2rem;
 }
 
