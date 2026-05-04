@@ -26,6 +26,7 @@ const SupportHub = lazy(() => import('./pages/support/SupportHub'));
 const OrderHelp = lazy(() => import('./pages/support/OrderHelp'));
 const ChatSupport = lazy(() => import('./pages/support/ChatSupport'));
 const ReviewSubmit = lazy(() => import('./pages/review/ReviewSubmit'));
+const GiftMessage = lazy(() => import('./pages/gift/GiftMessage'));
 const Policy = lazy(() => import('./pages/policy/Policy'));
 
 // ── Category pages ──────────────────────────────────────────────────────────
@@ -150,6 +151,9 @@ function App() {
 
               {/* Review submission page — no Navbar/Footer */}
               <Route path="/review" element={<ReviewSubmit />} />
+
+              {/* Gift Message View Page — no Navbar/Footer */}
+              <Route path="/gift/:hash" element={<GiftMessage />} />
 
               {/* All public pages with Navbar + Footer */}
               <Route path="/*" element={<PublicLayout />} />

@@ -21,6 +21,9 @@ const orderSchema = new mongoose.Schema({
   trackingActivities: [mongoose.Schema.Types.Mixed], // Persist live scans
   shiprocketError: { type: String }, // NEW: Saves exact error rejection
   giftWrapping: { type: Boolean, default: false },
+  isGift: { type: Boolean, default: false },
+  giftVideoUrl: { type: String },
+  giftHash: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
 

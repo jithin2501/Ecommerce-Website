@@ -8,6 +8,7 @@ const FREE_SHIPPING_THRESHOLD = 0; // Everything is Free Shipping now!
 const GIFT_WRAP_COST = 50;
 
 const calculateOrderTotals = async (items, giftWrapping) => {
+  const isGiftWrap = giftWrapping === true || giftWrapping === 'true';
   let subtotal = 0;
   const validatedItems = [];
 
@@ -30,10 +31,12 @@ const calculateOrderTotals = async (items, giftWrapping) => {
   }
 
   const shipping = 0; // Forced to zero per user request
-  const giftCost = giftWrapping ? GIFT_WRAP_COST : 0;
-  const total = subtotal + shipping + giftCost;
+  const giftCost = isGiftWrap ? GIFT_WRAP_COST : 0;
+  const subtotalWithExtras = subtotal + shipping + giftCost;
+  const tax = Math.round(subtotalWithExtras * 0.05 * 100) / 100;
+  const total = subtotalWithExtras + tax;
 
-  return { subtotal, shipping, giftCost, total, validatedItems };
+  return { subtotal, shipping, giftCost, tax, total, validatedItems };
 };
 
 exports.createOrder = async (req, res) => {
@@ -48,6 +51,8 @@ exports.createOrder = async (req, res) => {
       userEmail,
       items,
       giftWrapping,
+      isGift,
+      giftVideoUrl,
       shippingAddress,
       currency = 'INR',
       receipt = `rcpt_${Date.now()}`
@@ -78,6 +83,8 @@ exports.createOrder = async (req, res) => {
     let displayId = 'ST-';
     for (let i = 0; i < 6; i++) displayId += chars.charAt(Math.floor(Math.random() * chars.length));
 
+    const giftHash = isGift ? crypto.randomBytes(16).toString('hex') : undefined;
+
     let finalEmail = userEmail || shippingAddress?.email;
     if (!finalEmail && userId && userId !== 'guest') {
       const client = await ClientUser.findOne({ uids: userId }).lean();
@@ -95,6 +102,9 @@ exports.createOrder = async (req, res) => {
       items: validatedItems,
       shippingAddress,
       giftWrapping: !!giftWrapping,
+      isGift: !!isGift,
+      giftVideoUrl: giftVideoUrl || '',
+      giftHash: giftHash,
       status: 'pending'
     });
 
@@ -359,5 +369,28 @@ exports.getOrderById = async (req, res) => {
     res.json({ success: true, data: order });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch order details' });
+  }
+};
+
+exports.getOrderByGiftHash = async (req, res) => {
+  try {
+    const { hash } = req.params;
+    if (!hash) return res.status(400).json({ success: false, error: 'Hash is required' });
+
+    const order = await Order.findOne({ giftHash: hash, isGift: true, status: 'success' }).lean();
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Gift message not found' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        userName: order.userName,
+        giftVideoUrl: order.giftVideoUrl,
+        createdAt: order.createdAt
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };

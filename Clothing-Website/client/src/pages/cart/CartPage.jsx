@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import CartItems from '../../components/cart/CartItems';
 import OrderSummary from '../../components/cart/OrderSummary';
+import GiftVideoManager from '../../components/cart/GiftVideoManager';
 import CartYouMightAlsoLike from '../../components/cart/CartYouMightAlsoLike';
 import EmptyCart from '../../components/cart/EmptyCart';
 import AddressSidebar from '../../components/collectiondetails/AddressSidebar';
@@ -23,6 +24,8 @@ const SELECTED_KEY = 'sumathi_selected_address';  // set by cart page
 export default function CartPage() {
   const { cartItems, updateQty, removeItem, subtotal } = useCart();
   const [giftWrapping, setGiftWrapping] = useState(false);
+  const [isGift, setIsGift] = useState(false);
+  const [giftVideoUrl, setGiftVideoUrl] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -177,7 +180,9 @@ export default function CartPage() {
 
   const shipping = 0; // Forced to zero per user request
   const giftCost = giftWrapping ? GIFT_WRAP_COST : 0;
-  const total = subtotal + shipping + giftCost;
+  const subtotalWithExtras = subtotal + shipping + giftCost;
+  const tax = subtotalWithExtras * 0.05;
+  const total = subtotalWithExtras + tax;
 
   return (
     <div className="cp-page">
@@ -223,6 +228,11 @@ export default function CartPage() {
               onRemove={removeItem}
               onGiftChange={setGiftWrapping}
             />
+
+            <GiftVideoManager 
+              onVideoUpload={(url) => { setIsGift(true); setGiftVideoUrl(url); }}
+              onRemove={() => { setIsGift(false); setGiftVideoUrl(''); }}
+            />
           </div>
 
           <OrderSummary
@@ -230,6 +240,7 @@ export default function CartPage() {
             shipping={shipping}
             giftWrapping={giftWrapping}
             giftCost={giftCost}
+            tax={tax}
             total={total}
             user={auth.currentUser ? {
               uid: auth.currentUser.uid,
@@ -239,6 +250,8 @@ export default function CartPage() {
             } : null}
             cartItems={cartItems}
             selectedAddress={selectedAddress}
+            isGift={isGift}
+            giftVideoUrl={giftVideoUrl}
             onPaymentSuccess={setIsPaymentSuccess}
             setVerifying={setVerifying}
           />

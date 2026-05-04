@@ -15,11 +15,23 @@ const getAuthHeaders = async () => {
   };
 };
 
-export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCost, total, user, cartItems, selectedAddress, onPaymentSuccess, setVerifying }) {
+export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCost, tax, total, user, cartItems, selectedAddress, isGift, giftVideoUrl, onPaymentSuccess, setVerifying }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [serverTotals, setServerTotals] = useState({ subtotal, shipping, giftCost, total });
+  const [serverTotals, setServerTotals] = useState({ subtotal, shipping, giftCost, tax, total });
   const { clearCart } = useCart();
+
+  // Keep serverTotals in sync with optimistic prop changes
+  useEffect(() => {
+    setServerTotals(prev => ({
+      ...prev,
+      subtotal,
+      shipping,
+      giftCost,
+      tax,
+      total
+    }));
+  }, [subtotal, shipping, giftWrapping, giftCost, tax, total]);
 
   useEffect(() => {
     const fetchTotals = async () => {
@@ -31,15 +43,17 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
           headers,
           body: JSON.stringify({
             items: cartItems.map(i => ({ productId: i.id, qty: i.qty })),
-            giftWrapping
+            giftWrapping: !!giftWrapping
           })
         });
         const data = await res.json();
+        console.log('Server Totals Response:', data);
         if (data.success) {
           setServerTotals({
             subtotal: data.subtotal,
             shipping: data.shipping,
             giftCost: data.giftCost,
+            tax: data.tax,
             total: data.total
           });
         }
@@ -95,6 +109,8 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
           userName: user.name,
           userEmail: user.email,
           giftWrapping: giftWrapping,
+          isGift: isGift,
+          giftVideoUrl: giftVideoUrl,
           items: cartItems.map(item => ({
             productId: item.id,
             name: item.name,
@@ -217,19 +233,19 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
         {giftWrapping && (
           <div className="os-row os-gift-row">
             <span>Gift Wrapping</span>
-            <span>+₹{serverTotals.giftCost.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span>+₹{(serverTotals.giftCost || giftCost).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
         )}
 
         <div className="os-row">
           <span>Estimated Tax (5%)</span>
-          <span>₹{(serverTotals.total * 0.05).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span>₹{(serverTotals.tax || tax).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
       </div>
 
       <div className="os-total">
         <span>Total</span>
-        <span className="os-total-amount">₹{serverTotals.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        <span className="os-total-amount">₹{(serverTotals.total || total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
       </div>
 
       <button

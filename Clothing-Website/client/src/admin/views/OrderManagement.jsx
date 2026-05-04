@@ -404,7 +404,45 @@ function OrderDrawer({ order, onClose, onSync, syncing }) {
             </div>
           </div>
 
-          {/* 4. Tracking Section (Last) */}
+          {/* 4. Gift Section */}
+          {order.isGift && (
+            <div className="om-drawer-section">
+              <h4 className="om-sect-title" style={{ color: '#b8860b' }}>🎁 Gift Video Message</h4>
+              <div className="om-info-card" style={{ border: '1px solid #fde68a', background: '#fffbeb' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <div style={{ padding: '8px', background: '#fff', borderRadius: '8px', border: '1px solid #fde68a' }}>
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`${window.location.origin}/gift/${order.giftHash}`)}`} 
+                      alt="Gift QR"
+                      style={{ width: '80px', height: '80px' }}
+                    />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '13px', fontWeight: 700, color: '#92400e', marginBottom: '4px' }}>Scan to watch video</p>
+                    <p style={{ fontSize: '11px', color: '#b45309', marginBottom: '8px' }}>Include this QR code in the package</p>
+                    <a 
+                      href={`${window.location.origin}/gift/${order.giftHash}`} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      style={{ 
+                        fontSize: '11px', 
+                        color: '#fff', 
+                        background: '#b8860b', 
+                        padding: '4px 10px', 
+                        borderRadius: '4px', 
+                        textDecoration: 'none',
+                        fontWeight: 600
+                      }}
+                    >
+                      Preview Message
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 5. Tracking Section (Last) */}
           <div className="om-drawer-section">
             <h4 className="om-sect-title"><Truck size={16} /> Live Tracking</h4>
             <ShiprocketActivityTracker 

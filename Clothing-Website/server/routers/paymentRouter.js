@@ -14,6 +14,7 @@ const { paymentLimiter } = require('../middleware/rateLimiter');
 router.post('/create-order', verifyFirebaseToken, paymentLimiter, paymentCtrl.createOrder);
 router.post('/verify-payment', verifyFirebaseToken, paymentLimiter, paymentCtrl.verifyPayment);
 router.post('/calculate-summary', verifyFirebaseToken, paymentLimiter, paymentCtrl.calculateSummary);
+router.get('/gift/:hash', paymentCtrl.getOrderByGiftHash);
 
 // Admin-only — protected by JWT (Allowed for all admins with permission)
 router.get('/orders', protect, paymentCtrl.getAllOrders);
