@@ -233,17 +233,7 @@ const InfoRow = ({ label, value }) => (
 );
 const EmptyState = ({ text }) => <div className="cm-empty">{text}</div>;
 
-/* ════════════════════════════════════
-   STAT CARD
-   ════════════════════════════════════ */
-function StatCard({ label, value, color }) {
-  return (
-    <div className={`cm-stat-card cm-stat-${color}`}>
-      <span className="cm-stat-label">{label}</span>
-      <span className="cm-stat-value">{value ?? '—'}</span>
-    </div>
-  );
-}
+
 
 /* ════════════════════════════════════
    MAIN PAGE
@@ -319,15 +309,7 @@ export default function ClientManagement() {
       {/* Header */}
       <h1 className="cm-title">Client Management</h1>
 
-      {/* Stats */}
-      {stats && (
-        <div className="cm-stats-row">
-          <StatCard label="Total Clients" value={stats.total} color="blue" />
-          <StatCard label="Google Logins" value={stats.google} color="red" />
-          <StatCard label="Phone Logins" value={stats.phone} color="green" />
-          <StatCard label="New Today" value={stats.newToday} color="purple" />
-        </div>
-      )}
+
 
       {/* Toolbar */}
       <div className="cm-toolbar">
@@ -357,12 +339,29 @@ export default function ClientManagement() {
           />
         </div>
 
-        <select className="cm-date-filter" value={dateFilter} onChange={e => { setDateFilter(e.target.value); setPage(1); }}>
-          <option value="all">Join Date: All Time</option>
-          <option value="joined-today">Joined Today</option>
-          <option value="joined-week">Joined This Week</option>
-          <option value="joined-month">Joined This Month</option>
-        </select>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#64748b', 
+            fontWeight: '700', 
+            background: '#f8fafc', 
+            padding: '8px 16px', 
+            borderRadius: '10px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            letterSpacing: '0.3px'
+          }}>
+            TOTAL CLIENTS: <span style={{ color: '#1e293b' }}>{stats?.total || 0}</span>
+            <span style={{ margin: '0 12px', color: '#e2e8f0' }}>|</span>
+            NEW TODAY: <span style={{ color: '#1e293b' }}>{stats?.newToday || 0}</span>
+          </div>
+          <select className="cm-date-filter" value={dateFilter} onChange={e => { setDateFilter(e.target.value); setPage(1); }}>
+            <option value="all">Join Date: All Time</option>
+            <option value="joined-today">Joined Today</option>
+            <option value="joined-week">Joined This Week</option>
+            <option value="joined-month">Joined This Month</option>
+          </select>
+        </div>
       </div>
 
       {/* Table */}
@@ -378,7 +377,6 @@ export default function ClientManagement() {
                 <th>Client</th>
                 <th className="cm-th-id">ID</th>
                 <th>Contact</th>
-                <th className="cm-th-login">Login</th>
                 <th className="cm-th-orders">Orders</th>
                 <th className="cm-th-seen">Last Seen</th>
                 <th></th>
@@ -408,9 +406,7 @@ export default function ClientManagement() {
                     {c.email && c.phone && <span className="cm-contact-sub">{c.phone}</span>}
                   </td>
 
-                  <td className="cm-td-login">
-                    <LoginBadge types={c.loginTypes || c.loginType} />
-                  </td>
+
 
                   <td className="cm-td-orders"><span className="cm-pill">{c.orderCount || 0}</span></td>
 

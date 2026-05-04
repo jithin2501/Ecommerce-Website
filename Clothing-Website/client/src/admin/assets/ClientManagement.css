@@ -29,57 +29,7 @@
   margin: 0;
 }
 
-/* ── Stats Row ── */
-.cm-stats-row {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-}
 
-.cm-stat-card {
-  flex: 1;
-  min-width: 120px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  text-align: center;
-  align-items: center;
-}
-
-.cm-stat-blue {
-  background-color: #1d4ed8;
-}
-
-.cm-stat-red {
-  background-color: #b91c1c;
-}
-
-.cm-stat-green {
-  background-color: #15803d;
-}
-
-.cm-stat-purple {
-  background-color: #6d28d9;
-}
-
-.cm-stat-value {
-  font-size: 26px;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.cm-stat-label {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
 
 /* ── Toolbar ── */
 .cm-toolbar {
@@ -197,36 +147,31 @@
 
 /* Specific Column Widths for a balanced layout */
 .cm-table th:nth-child(1) {
-  width: 20%;
+  width: 25%;
 }
 
 /* Client */
 .cm-table th:nth-child(2) {
-  width: 10%;
+  width: 12%;
 }
 
 /* ID */
 .cm-table th:nth-child(3) {
-  width: 25%;
+  width: 30%;
 }
 
 /* Contact */
 .cm-table th:nth-child(4) {
-  width: 12%;
-}
-
-/* Login */
-.cm-table th:nth-child(5) {
   width: 10%;
 }
 
 /* Orders */
-.cm-table th:nth-child(6) {
+.cm-table th:nth-child(5) {
   width: 13%;
 }
 
 /* Last Seen */
-.cm-table th:nth-child(7) {
+.cm-table th:nth-child(6) {
   width: 10%;
 }
 
@@ -242,9 +187,9 @@
   padding: 13px 18px;
 }
 
-/* Center header + data for ID, Contact, Login, Orders, Last Seen (columns 2–6) */
-.cm-table th:nth-child(n+2):nth-child(-n+6),
-.cm-table td:nth-child(n+2):nth-child(-n+6) {
+/* Center header + data for ID, Contact, Orders, Last Seen (columns 2–5) */
+.cm-table th:nth-child(n+2):nth-child(-n+5),
+.cm-table td:nth-child(n+2):nth-child(-n+5) {
   text-align: center;
 }
 
@@ -776,21 +721,8 @@
     padding: 0.5rem 0.2rem;
   }
 
-  .cm-stats-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 1.5rem;
-  }
-
-  .cm-stat-card {
-    padding: 12px;
-    min-width: 0;
-    flex: none;
-  }
-
-  .cm-stat-value {
-    font-size: 20px;
+  .cm-date-filter {
+    width: 100%;
   }
 
   /* Toolbar Responsive */
