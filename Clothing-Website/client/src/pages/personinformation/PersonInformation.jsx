@@ -93,6 +93,7 @@ export default function PersonInformation() {
       if (data.success) {
         setDbUser(data.user);
         localStorage.setItem('clientUser', JSON.stringify(data.user));
+        window.dispatchEvent(new Event('client_user_updated'));
       }
     } catch (err) {
       console.error("Update failed", err);
@@ -337,10 +338,6 @@ export default function PersonInformation() {
 
             <div className="delete-account-wrapper">
               <span className="delete-account" onClick={handleDeleteAccount} style={{ cursor: 'pointer' }}>Delete Account</span>
-            </div>
-            
-            <div style={{ marginTop: '20px', textAlign: 'center' }}>
-              <button onClick={handleLogout} className="btn-save" style={{ backgroundColor: '#ff4444' }}>LOGOUT</button>
             </div>
           </div>
         </main>

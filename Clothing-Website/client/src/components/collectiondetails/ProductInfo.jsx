@@ -89,28 +89,28 @@ export default function ProductInfo({
     }
     
     // Auth requirements for strict validation
-    if (auth?.currentUser && userInfo) {
-      const isGoogle = userInfo.loginType === 'google' || auth.currentUser.providerData[0]?.providerId === 'google.com';
-      const isPhone  = userInfo.loginType === 'phone' || auth.currentUser.providerData[0]?.providerId === 'phone';
+    if (auth && userInfo) {
+      const isGoogle = userInfo.loginTypes?.includes('google');
+      const isPhone  = userInfo.loginTypes?.includes('phone');
 
       if (isGoogle && !userInfo.phone) {
         alert("Please complete your Personal Information (Phone number) in your account before adding to cart.");
-        navigate('/account');
+        navigate('/account/profile');
         return false;
       } 
       
-      if (isPhone && !userInfo.fullName) {
-        alert("Please complete your Personal Information (Name) in your account before adding to cart. No email is required.");
-        navigate('/account');
+      if (isPhone && !userInfo.name) {
+        alert("Please complete your Personal Information (Name) in your account before adding to cart.");
+        navigate('/account/profile');
         return false;
       }
       
-      if (!isGoogle && !isPhone && (!userInfo.fullName || !userInfo.phone)) {
+      if (!isGoogle && !isPhone && (!userInfo.name || !userInfo.phone)) {
         alert("Please complete your Personal Information in your account before adding to cart.");
-        navigate('/account');
+        navigate('/account/profile');
         return false;
       }
-    } else if (auth && !auth.currentUser) {
+    } else if (!auth) {
       alert("Please login to add items to your cart.");
       navigate('/login');
       return false;

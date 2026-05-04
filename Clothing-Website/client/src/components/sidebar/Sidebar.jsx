@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { authFetch } from '../../utils/authFetch';
 import '../../styles/sidebar/Sidebar.css';
 
@@ -10,34 +8,28 @@ export default function Sidebar({ activeNav, setActiveNav, activeSubNav, setActi
   const [userData, setUserData] = useState(user || null);
 
   useEffect(() => {
-    // 1. If user is passed as prop, use it and stop.
-    if (user) {
-      setUserData(user);
-      return;
-    }
-
-    // 2. Otherwise, fetch independently (for pages like Wishlist/Addresses)
-    const unsub = onAuthStateChanged(auth, async (fbUser) => {
-      if (fbUser) {
-        // ONLY fetch if we don't already have the data to stop loops
-        if (!userData) {
-          try {
-            const res = await authFetch(`/api/client-auth/profile/${fbUser.uid}`);
-            const data = await res.json();
-            if (data.success) {
-              setUserData(data.user);
-            }
-          } catch (err) {
-            console.error("Sidebar: Failed to fetch profile", err);
-          }
-        }
+    const checkUser = () => {
+      if (user) {
+        setUserData(user);
+        return;
+      }
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+      if (token && userJson) {
+        setUserData(JSON.parse(userJson));
       } else {
         setUserData(null);
       }
-    });
+    };
 
-    return () => unsub();
-  }, [user, userData]); // Added userData dependency to allow conditional check
+    checkUser();
+    window.addEventListener('storage', checkUser);
+    window.addEventListener('client_user_updated', checkUser);
+    return () => {
+      window.removeEventListener('storage', checkUser);
+      window.removeEventListener('client_user_updated', checkUser);
+    };
+  }, [user]);
 
   const handleSubNav = (key, path) => {
     setActiveSubNav(key);

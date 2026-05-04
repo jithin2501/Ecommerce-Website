@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { authFetch } from '../../utils/authFetch';
 import { Search } from 'lucide-react';
 import '../../styles/manageaddresses/ManageAddresses.css';
@@ -18,21 +16,33 @@ export default function AddressSidebar({ isOpen, onClose, onSelectAddress }) {
 
   // Fetch addresses on open / auth change
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
+    const fetchAddresses = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+      
+      if (token && userJson) {
         try {
-          const res = await authFetch(`/api/client-auth/addresses/${user.uid}`);
+          const user = JSON.parse(userJson);
+          console.log("AddressSidebar: Fetching for customerId:", user.customerId);
+          const res = await authFetch(`/api/client-auth/addresses/${user.customerId}`);
           const data = await res.json();
+          console.log("AddressSidebar: Data received:", data);
           if (data.success) setAddresses(data.addresses || []);
-        } catch { }
+        } catch (err) {
+          console.error("Failed to fetch addresses:", err);
+        }
       } else {
+        // Fallback to guest addresses if any
         try {
           const saved = localStorage.getItem('sumathi_addresses');
           setAddresses(saved ? JSON.parse(saved) : []);
         } catch { setAddresses([]); }
       }
-    });
-    return () => unsub();
+    };
+
+    if (isOpen) {
+      fetchAddresses();
+    }
   }, [isOpen]);
 
   // ── Live sync: react to deletions/saves made in ManageAddresses ──
@@ -116,7 +126,8 @@ export default function AddressSidebar({ isOpen, onClose, onSelectAddress }) {
           <button
             onClick={() => { 
               onClose(); 
-              if (auth.currentUser) {
+              const token = localStorage.getItem('clientToken');
+              if (token) {
                 navigate('/account/addresses'); 
               } else {
                 navigate('/login');

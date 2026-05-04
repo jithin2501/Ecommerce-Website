@@ -233,11 +233,16 @@ export default function ManageAddresses() {
           }
 
           if (Object.keys(updates).length > 0) {
-            await authFetch(`/api/client-auth/profile/${userUid}`, {
+            const syncRes = await authFetch(`/api/client-auth/profile/${userUid}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(updates)
             });
+            const syncData = await syncRes.json();
+            if (syncData.success) {
+              localStorage.setItem('clientUser', JSON.stringify(syncData.user));
+              window.dispatchEvent(new Event('client_user_updated'));
+            }
           }
         }
       } catch (err) {

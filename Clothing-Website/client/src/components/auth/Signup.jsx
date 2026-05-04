@@ -29,6 +29,7 @@ export default function Signup() {
       if (data.success) {
         localStorage.setItem('clientToken', data.token);
         localStorage.setItem('clientUser', JSON.stringify(data.user));
+        window.dispatchEvent(new Event('client_user_updated'));
         setMessage({ text: 'Account created successfully!', type: 'success' });
         setTimeout(() => navigate('/'), 1500);
       } else {

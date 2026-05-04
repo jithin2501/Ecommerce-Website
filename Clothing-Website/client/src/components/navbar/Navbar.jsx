@@ -90,9 +90,12 @@ export default function Navbar() {
     };
 
     checkUser();
-    // Listen for changes (e.g. on login/logout)
     window.addEventListener('storage', checkUser);
-    return () => window.removeEventListener('storage', checkUser);
+    window.addEventListener('client_user_updated', checkUser);
+    return () => {
+      window.removeEventListener('storage', checkUser);
+      window.removeEventListener('client_user_updated', checkUser);
+    };
   }, [location.pathname]); // Re-check when route changes
 
   useEffect(() => {

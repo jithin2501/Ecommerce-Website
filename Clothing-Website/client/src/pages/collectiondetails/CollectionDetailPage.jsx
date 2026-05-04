@@ -9,8 +9,7 @@ import AddressSidebar   from '../../components/collectiondetails/AddressSidebar'
 import ShareModal      from '../../components/collectiondetails/ShareModal';
 import SEO from '../../components/SEO';
 import '../../styles/collectiondetails/CollectionDetailPage.css';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { authFetch } from '../../utils/authFetch';
 
 const API = '/api';
 
@@ -80,6 +79,7 @@ export default function CollectionDetailPage() {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [zoomState, setZoomState] = useState({ isZoomed: false, x: 0, y: 0 });
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [authToken, setAuthToken] = useState(localStorage.getItem('clientToken'));
 
   const handleSelectAddress = (addr) => {
     setSelectedAddress(addr);
@@ -87,20 +87,21 @@ export default function CollectionDetailPage() {
   };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      // 1. If logged in, fetch from DB using Firebase ID Token
-      if (user) {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+      setAuthToken(token);
+
+      if (token && userJson) {
         try {
-          const idToken = await user.getIdToken();
-          const res = await fetch(`${API}/client-auth/addresses/${user.uid}`, {
-            headers: {
-              'Authorization': `Bearer ${idToken}`
-            }
-          });
+          const user = JSON.parse(userJson);
+          setUserInfo(user);
+
+          // Fetch addresses using customerId
+          const res = await authFetch(`/api/client-auth/addresses/${user.customerId}`);
           const data = await res.json();
+          
           if (data.success && data.addresses) {
-            setUserInfo(data.user);
-            
             const savedSelection = localStorage.getItem('sumathi_selected_address');
             let manualAddr = null;
             if (savedSelection) {
@@ -127,7 +128,7 @@ export default function CollectionDetailPage() {
         }
       }
 
-      // 2. Fallback for guests
+      // Fallback for guests
       const savedSelection = localStorage.getItem('sumathi_selected_address');
       if (savedSelection) {
         try {
@@ -145,8 +146,11 @@ export default function CollectionDetailPage() {
           setSelectedAddress(saved[0]);
         }
       } catch (e) {}
-    });
-    return () => unsub();
+    };
+
+    checkAuth();
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
   }, []);
 
   const handleZoomChange  = useCallback((state) => setZoomState(state), []);
@@ -258,7 +262,7 @@ export default function CollectionDetailPage() {
               selectedAddress={selectedAddress}
               onOpenSidebar={() => setIsSidebarOpen(true)}
               userInfo={userInfo}
-              auth={auth}
+              auth={authToken}
               inventory={product?.inventory || {}}
               stock={product?.stock ?? 0}
               onShare={() => setIsShareOpen(true)}
