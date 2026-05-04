@@ -43,6 +43,33 @@ const verifyFirebaseToken = async (req, res, next) => {
   }
 };
 
+const protectClient = async (req, res, next) => {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'You are not logged in.' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const ClientUser = require('../models/ClientUser');
+    const currentUser = await ClientUser.findById(decoded.id);
+
+    if (!currentUser) {
+      return res.status(401).json({ success: false, message: 'User no longer exists.' });
+    }
+
+    req.user = currentUser;
+    req.clientUid = currentUser.customerId; // Compatibility with UID logic
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, message: 'Invalid token.' });
+  }
+};
+
 const requireOwnership = (req, res, next) => {
   // Checks req.params.uid or req.body.uid
   const resourceUid = req.params.uid || req.body.uid;
@@ -50,10 +77,12 @@ const requireOwnership = (req, res, next) => {
     return res.status(400).json({ success: false, message: 'Resource UID missing for ownership check.' });
   }
 
-  if (req.firebaseUid !== resourceUid) {
-    return res.status(403).json({ success: false, message: 'Forbidden: You do not own this resource.' });
+  // Allow if Firebase UID matches OR if Client customerId matches
+  if (req.firebaseUid === resourceUid || req.clientUid === resourceUid) {
+    return next();
   }
-  next();
+
+  return res.status(403).json({ success: false, message: 'Forbidden: You do not own this resource.' });
 };
 
 // Allows access if EITHER a valid Admin JWT OR a valid Firebase token is present
@@ -83,6 +112,7 @@ const anyAuth = async (req, res, next) => {
 
 module.exports = {
   protect,
+  protectClient,
   superAdminOnly,
   verifyFirebaseToken,
   requireOwnership,

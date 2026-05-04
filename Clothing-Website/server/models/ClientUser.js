@@ -68,8 +68,13 @@ const clientUserSchema = new mongoose.Schema({
   // Which provider this profile was created with ('google' or 'phone')
   loginTypes: {
     type: [String],
-    enum: ['google', 'phone'],
+    enum: ['google', 'phone', 'email'],
     default: [],
+  },
+
+  password: {
+    type: String,
+    select: false, // Don't return password by default in queries
   },
 
   name: { type: String, default: '' },
@@ -87,5 +92,19 @@ const clientUserSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 }, { timestamps: false });
 
+
+const bcrypt = require('bcryptjs');
+
+// Hash password before saving
+clientUserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+// Method to check if password is correct
+clientUserSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 module.exports = mongoose.model('ClientUser', clientUserSchema);

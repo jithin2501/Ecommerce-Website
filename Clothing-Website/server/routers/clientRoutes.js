@@ -1,19 +1,16 @@
-// server/routers/clientRoutes.js
-// ⚠️  Renamed from authRoutes.js → clientRoutes.js
-//     because server/routers/authRouter.js already exists.
-
 const express    = require('express');
 const router     = express.Router();
 const clientCtrl = require('../controllers/clientController');
-const { verifyFirebaseToken, requireOwnership } = require('../middleware/authMiddleware');
+const { protectClient, requireOwnership } = require('../middleware/authMiddleware');
 
 // Public client auth endpoints (called from Login.jsx)
-router.post('/google', clientCtrl.googleLogin);
-router.post('/phone',  clientCtrl.phoneLogin);
+router.post('/register', clientCtrl.register);
+router.post('/login',    clientCtrl.login);
+router.post('/google',   clientCtrl.googleLogin);
+router.post('/phone',    clientCtrl.phoneLogin);
 
-// Protected routes - require valid Firebase token and ownership of the Targeted UID
-// We apply middlewares individually to ensure req.params.uid is correctly populated for requireOwnership
-const protected = [verifyFirebaseToken, requireOwnership];
+// Protected routes
+const protected = [protectClient, requireOwnership];
 
 router.post('/sync-cart',     ...protected, clientCtrl.syncCart);
 router.post('/sync-wishlist', ...protected, clientCtrl.syncWishlist);

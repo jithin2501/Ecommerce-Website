@@ -1,10 +1,83 @@
-const ClientUser = require('../models/ClientUser');
-const ProductReview = require('../models/ProductReview');
+const jwt = require('jsonwebtoken');
+
+const signToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '30d',
+  });
+};
 
 async function nextCustomerId() {
   const count = await ClientUser.countDocuments();
   return `CUST-${String(count + 1).padStart(5, '0')}`;
 }
+
+exports.register = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Check if user already exists
+    const existingUser = await ClientUser.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    const customerId = await nextCustomerId();
+    const user = await ClientUser.create({
+      name,
+      email,
+      password,
+      customerId,
+      uids: [customerId], // Using customerId as a fallback for the old UID logic
+      loginTypes: ['email'],
+      lastSeen: new Date(),
+    });
+
+    const token = signToken(user._id);
+
+    // Remove password from output
+    user.password = undefined;
+
+    res.status(201).json({
+      success: true,
+      token,
+      user,
+    });
+  } catch (err) {
+    console.error('❌ register error:', err);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Please provide email and password' });
+    }
+
+    // Find user and explicitly select password
+    const user = await ClientUser.findOne({ email }).select('+password');
+
+    if (!user || !(await user.correctPassword(password, user.password))) {
+      return res.status(401).json({ error: 'Incorrect email or password' });
+    }
+
+    const token = signToken(user._id);
+
+    // Remove password from output
+    user.password = undefined;
+
+    res.json({
+      success: true,
+      token,
+      user,
+    });
+  } catch (err) {
+    console.error('❌ login error:', err);
+    res.status(500).json({ error: 'Login failed' });
+  }
+};
 
 exports.googleLogin = async (req, res) => {
   try {
