@@ -12,10 +12,10 @@ const HomePage = () => {
   return (
     <>
       <SEO 
-        title="Best Kids Clothing in Kodigehalli & Bangalore"
-        description="Shop the best kids clothing in Kodigehalli, Bangalore at Sumathi Trends. We offer a wide range of Occasion Wear, Party Wear, Traditional & Ethnic Wear, and Designer Frocks for kids."
-        keywords="Best kids clothing in Kodigehalli, Best kids clothing in Bangalore, Sumathi Trends, Kids Boutique Bangalore, children's wear, party wear frocks, traditional ethnic wear"
-        url="https://sumathitrends.com/"
+        title="Best Kids Clothing in Kodigehalli & Bangalore | Trendora Trends"
+        description="Shop the best kids clothing in Kodigehalli, Bangalore at Trendora Trends. We offer a wide range of Occasion Wear, Party Wear, Traditional & Ethnic Wear, and Designer Frocks for kids."
+        keywords="Best kids clothing in Kodigehalli, Best kids clothing in Bangalore, Trendora Trends, Kids Boutique Bangalore, children's wear, party wear frocks, traditional ethnic wear"
+        url="https://trendoratrends.com/"
       />
       <main>
         <Hero />

@@ -206,7 +206,7 @@ export default function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem('clientToken');
     localStorage.removeItem('clientUser');
-    localStorage.removeItem('sumathi_selected_address');
+    localStorage.removeItem('trendora_selected_address');
     setUser(null);
     setShowDropdown(false);
     navigate('/');
@@ -226,9 +226,9 @@ export default function Navbar() {
         {/* ── Logo ── */}
         <Link to="/" className="logo-container" onClick={handleHome}>
           <div className="logo-img">
-            <img src="/images/logo/logo.png" alt="Sumathi Trends" onError={(e) => { e.target.style.opacity = '0'; }} />
+            <img src="/images/logo/logo.png" alt="Trendora Trends" onError={(e) => { e.target.style.opacity = '0'; }} />
           </div>
-          <div className="logo-text">Sumathi<br />Trends</div>
+          <div className="logo-text">Trendora<br />Trends</div>
         </Link>
 
         {/* ── Desktop Nav Links ── */}
@@ -295,7 +295,7 @@ export default function Navbar() {
 
         {/* Close Button */}
         <div className="sidebar-header">
-          <p className="sidebar-brand">Sumathi Trends</p>
+          <p className="sidebar-brand">Trendora Trends</p>
           <button className="sidebar-close" onClick={() => setIsSidebarOpen(false)} aria-label="Close menu">
             <X size={24} />
           </button>

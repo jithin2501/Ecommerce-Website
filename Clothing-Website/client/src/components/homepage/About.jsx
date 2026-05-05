@@ -29,7 +29,7 @@ export default function About() {
           <div className="about-visuals">
             <img
               src="images/homepage/About.webp"
-              alt="About Sumathi Trends"
+              alt="About Trendora Trends"
               className="about-img"
             />
           </div>
@@ -40,7 +40,7 @@ export default function About() {
               <span className="accent-text">Worn with Pride.</span>
             </h3>
             <p className="about-desc">
-              Sumathi Trends is recognized as the <strong>Best Kids Clothing store in Kodigehalli, Bangalore</strong>.
+              Trendora Trends is recognized as the <strong>Best Kids Clothing store in Kodigehalli, Bangalore</strong>.
               Founded in 2026, we blend timeless design with premium materials to create clothing that grows with your little
               ones — from their first steps to their biggest milestones.
             </p>

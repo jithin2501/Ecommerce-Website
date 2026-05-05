@@ -91,7 +91,7 @@ app.use('/api/payment', paymentRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/ai', aiRouter);
 
-app.get('/', (req, res) => res.json({ message: 'Sumathi Trends API running.' }));
+app.get('/', (req, res) => res.json({ message: 'Trendora Trends API running.' }));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

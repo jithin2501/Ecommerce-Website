@@ -43,16 +43,16 @@ export default function Footer() {
               <div className="footer-logo-img">
                 <img
                   src="/images/logo/logo.png"
-                  alt="Sumathi Trends"
+                  alt="Trendora Trends"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               </div>
-              <div className="footer-logo-text">Sumathi Trends</div>
+              <div className="footer-logo-text">Trendora Trends</div>
             </div>
             <p className="brand-description">
               The best kids clothing store in Kodigehalli, Bangalore. 
               Elevating children's fashion through timeless design, premium
-              materials, and exceptional craftsmanship since 2026.
+              materials, and exceptional craftsmanship.
             </p>
             <div className="social-links">
               <a href="https://www.facebook.com/share/14U8LwvzzXa/?mibextid=wwXIfr" className="social-icon" aria-label="Facebook">
@@ -129,7 +129,7 @@ export default function Footer() {
         <div className="footer-divider" />
 
         <div className="footer-bottom">
-          <p>&copy; 2026 Sumathi Trends. All rights reserved.</p>
+          <p>&copy; 2026 Trendora Trends. All rights reserved.</p>
           <div className="legal-links">
             <button className="legal-link-btn" onClick={(e) => handleLegalClick(e, '/account/policy/privacy')}>
               Privacy Policy
