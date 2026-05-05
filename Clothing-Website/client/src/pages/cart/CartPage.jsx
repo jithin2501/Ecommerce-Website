@@ -25,7 +25,17 @@ export default function CartPage() {
   const [isGift, setIsGift] = useState(false);
   const [giftVideoUrl, setGiftVideoUrl] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState(() => {
+    const saved = localStorage.getItem('clientUser');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -53,7 +63,8 @@ export default function CartPage() {
           });
           const data = await res.json();
           if (data.success && data.addresses) {
-            setUserInfo(data.user);
+            if (data.user) setUserInfo(data.user);
+            else if (user) setUserInfo(user); // Fallback to localStorage user if API doesn't return it
 
             // Priority: Manual selection (if still valid) > DB Default
             const savedSelection = localStorage.getItem(SELECTED_KEY) || localStorage.getItem(ACTIVE_KEY);
@@ -247,7 +258,7 @@ export default function CartPage() {
             tax={tax}
             total={total}
             user={userInfo ? {
-              uid: userInfo.customerId,
+              uid: userInfo.customerId || userInfo._id,
               name: userInfo.name,
               email: userInfo.email,
               phone: userInfo.phone,

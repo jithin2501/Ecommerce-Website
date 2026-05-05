@@ -34,7 +34,8 @@ export default function AccountHub() {
 
       try {
         const user = JSON.parse(userJson);
-        const res = await authFetch(`/api/client-auth/profile/${user.customerId}`);
+        const identifier = user.customerId || user._id || user.uid;
+        const res = await authFetch(`/api/client-auth/profile/${identifier}`);
         const data = await res.json();
         if (data.success) {
           setDbUser(data.user);

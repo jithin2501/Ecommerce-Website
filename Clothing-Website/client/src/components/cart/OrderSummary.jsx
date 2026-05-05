@@ -73,7 +73,25 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
   };
 
   const handleCheckout = async () => {
-    if (!user) {
+    let currentUser = user;
+    
+    // Fallback if prop is missing but user is actually in localStorage
+    if (!currentUser) {
+      const savedUser = localStorage.getItem('clientUser');
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          currentUser = {
+            uid: parsed.customerId,
+            name: parsed.name,
+            email: parsed.email,
+            phone: parsed.phone
+          };
+        } catch (e) {}
+      }
+    }
+
+    if (!currentUser || !currentUser.uid) {
       alert('Please login to continue with checkout.');
       return;
     }
@@ -103,9 +121,9 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
         headers,
         body: JSON.stringify({
           amount: serverTotals.total,
-          userId: user.uid,
-          userName: user.name,
-          userEmail: user.email,
+          userId: currentUser.uid,
+          userName: currentUser.name,
+          userEmail: currentUser.email,
           giftWrapping: giftWrapping,
           isGift: isGift,
           giftVideoUrl: giftVideoUrl,
@@ -113,7 +131,6 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
             productId: item.id,
             name: item.name,
             qty: item.qty,
-
             price: item.price,
             size: item.size,
             color: item.color,
@@ -121,8 +138,8 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
             img: item.img
           })),
           shippingAddress: {
-            name: selectedAddress.name || user.name,
-            phone: selectedAddress.phone || user.phone,
+            name: selectedAddress.name || currentUser.name,
+            phone: selectedAddress.phone || currentUser.phone,
             address: `${selectedAddress.line1}, ${selectedAddress.city}`,
             pincode: selectedAddress.pincode,
             city: selectedAddress.city
@@ -192,9 +209,9 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
           }
         },
         prefill: {
-          name: user.name || '',
-          email: user.email || '',
-          contact: user.phone || ''
+          name: currentUser.name || '',
+          email: currentUser.email || '',
+          contact: currentUser.phone || ''
         },
         notes: {
           address: `${selectedAddress.line1}, ${selectedAddress.city}`

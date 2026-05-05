@@ -29,8 +29,19 @@ export default function Navbar() {
   const prevPathRef = useRef(location.pathname);
 
   const [scrolled, setScrolled] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    const token = localStorage.getItem('clientToken');
+    const userJson = localStorage.getItem('clientUser');
+    if (token && userJson) {
+      try {
+        return JSON.parse(userJson);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -82,7 +93,11 @@ export default function Navbar() {
       const token = localStorage.getItem('clientToken');
       const userJson = localStorage.getItem('clientUser');
       if (token && userJson) {
-        setUser(JSON.parse(userJson));
+        try {
+          setUser(JSON.parse(userJson));
+        } catch (e) {
+          setUser(null);
+        }
       } else {
         setUser(null);
       }

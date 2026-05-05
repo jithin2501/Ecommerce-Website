@@ -61,9 +61,10 @@ export default function ManageAddresses() {
 
       if (token && userJson) {
         const user = JSON.parse(userJson);
-        setUserUid(user.customerId);
+        const identifier = user.customerId || user._id || user.uid;
+        setUserUid(identifier);
         try {
-          const res = await authFetch(`/api/client-auth/addresses/${user.customerId}`);
+          const res = await authFetch(`/api/client-auth/addresses/${identifier}`);
           const data = await res.json();
           if (data.success) setAddresses_(data.addresses || []);
         } catch (err) {

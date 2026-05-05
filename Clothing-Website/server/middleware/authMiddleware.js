@@ -43,7 +43,16 @@ const protectClient = async (req, res, next) => {
     }
 
     req.user = currentUser;
-    req.clientUid = currentUser.customerId; // Compatibility with UID logic
+    
+    // Auto-generate customerId for legacy users if missing
+    if (!currentUser.customerId) {
+      const count = await ClientUser.countDocuments();
+      currentUser.customerId = `CUST-${String(count + 1).padStart(5, '0')}`;
+      await currentUser.save();
+    }
+
+    req.clientUid = currentUser.customerId;
+    req.clientId = currentUser._id.toString(); 
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Invalid token.' });
@@ -57,8 +66,8 @@ const requireOwnership = (req, res, next) => {
     return res.status(400).json({ success: false, message: 'Resource UID missing for ownership check.' });
   }
 
-  // Allow if Client customerId matches
-  if (req.clientUid === resourceUid) {
+  // Allow if Client customerId matches OR MongoDB _id matches
+  if (req.clientUid === resourceUid || req.clientId === resourceUid) {
     return next();
   }
 

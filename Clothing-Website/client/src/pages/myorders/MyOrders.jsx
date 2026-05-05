@@ -30,9 +30,10 @@ export default function MyOrders() {
 
       if (token && userJson) {
         const user = JSON.parse(userJson);
+        const identifier = user.customerId || user._id || user.uid;
         setUser(user);
         try {
-          const res = await fetch(`/api/payment/user-orders/${user.customerId}`, {
+          const res = await fetch(`/api/payment/user-orders/${identifier}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const data = await res.json();

@@ -34,9 +34,10 @@ export function WishlistProvider({ children }) {
 
       if (token && userJson) {
         const user = JSON.parse(userJson);
+        const identifier = user.customerId || user._id || user.uid;
         wasLoggedIn.current = true;
         try {
-          const res = await authFetch(`/api/client-auth/profile/${user.customerId}`);
+          const res = await authFetch(`/api/client-auth/profile/${identifier}`);
           const data = await res.json();
           if (data.success && data.user) {
             const dbWishlist = (data.user.wishlist || []).map(item => ({
@@ -78,7 +79,7 @@ export function WishlistProvider({ children }) {
     const userJson = localStorage.getItem('clientUser');
     if (!token || !userJson || !isLoaded) return;
     const user = JSON.parse(userJson);
-
+    const identifier = user.customerId || user._id || user.uid;
     const syncTimeout = setTimeout(async () => {
       try {
         const syncData = wishlist.map(item => ({
@@ -92,7 +93,7 @@ export function WishlistProvider({ children }) {
         await authFetch('/api/client-auth/sync-wishlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uid: user.customerId, wishlist: syncData })
+          body: JSON.stringify({ uid: identifier, wishlist: syncData })
         });
       } catch (err) {
         console.error('Failed to sync wishlist:', err);
@@ -107,6 +108,7 @@ export function WishlistProvider({ children }) {
     const userJson = localStorage.getItem('clientUser');
     if (!token || !userJson) return;
     const user = JSON.parse(userJson);
+    const identifier = user.customerId || user._id || user.uid;
 
     try {
       const syncData = newWishlist.map(item => ({
@@ -119,7 +121,7 @@ export function WishlistProvider({ children }) {
       await authFetch('/api/client-auth/sync-wishlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.customerId, wishlist: syncData })
+        body: JSON.stringify({ uid: identifier, wishlist: syncData })
       });
     } catch (err) {
       console.error('Failed to immediate sync wishlist:', err);

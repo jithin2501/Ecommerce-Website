@@ -329,14 +329,16 @@ export default function ChatSupport() {
           <div className="cs-chat-wrap">
 
             <div className="cs-chat-header">
-              <button className="mobile-back-btn" onClick={() => navigate('/support')}>
+              <button className="mobile-back-btn cs-back-btn" onClick={() => navigate('/support')}>
                 <span className="back-chevron">
-                  <svg width="24" height="24" viewBox="1.5 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="24" height="24" viewBox="1.5 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6"></polyline>
                   </svg>
                 </span>
               </button>
-              <div className="cs-header-avatar">ST</div>
+              <div className="cs-header-avatar">
+                <img src="/images/logo/logo.png" alt="ST" className="cs-logo-img" />
+              </div>
               <div className="cs-header-info">
                 <div className="cs-header-name">Sumathi Trends Support</div>
                 <div className="cs-header-status"><span className="cs-online-dot" /> Online</div>
@@ -351,7 +353,7 @@ export default function ChatSupport() {
                 }
                 return (
                   <div key={i} className={`cs-msg cs-msg--${msg.from}`}>
-                    {msg.from === 'bot' && <div className="cs-avatar">ST</div>}
+                    {msg.from === 'bot' && <div className="cs-avatar"><img src="/images/logo/logo.png" alt="ST" className="cs-logo-img-small" /></div>}
                     <div className={`cs-bubble cs-bubble--${msg.from}`}>
                       {msg.from === 'bot' && <div className="cs-sender">SUPPORT BOT</div>}
                       {msg.text && <p>{msg.text}</p>}

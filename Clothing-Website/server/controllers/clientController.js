@@ -169,7 +169,7 @@ exports.syncCart = async (req, res) => {
   try {
     const { uid, cart } = req.body;
     if (!uid) return res.status(400).json({ error: 'uid required' });
-    await ClientUser.findOneAndUpdate({ uids: uid }, { cart, lastSeen: new Date() });
+    await ClientUser.findOneAndUpdate({ $or: [{ uids: uid }, { customerId: uid }] }, { cart, lastSeen: new Date() });
     res.json({ success: true });
   } catch (err) {
     console.error('❌ syncCart error:', err);
@@ -181,7 +181,7 @@ exports.syncWishlist = async (req, res) => {
   try {
     const { uid, wishlist } = req.body;
     if (!uid) return res.status(400).json({ error: 'uid required' });
-    await ClientUser.findOneAndUpdate({ uids: uid }, { wishlist, lastSeen: new Date() });
+    await ClientUser.findOneAndUpdate({ $or: [{ uids: uid }, { customerId: uid }] }, { wishlist, lastSeen: new Date() });
     res.json({ success: true });
   } catch (err) {
     console.error('❌ syncWishlist error:', err);
@@ -192,7 +192,7 @@ exports.syncWishlist = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const { uid } = req.params;
-    const user = await ClientUser.findOne({ uids: uid });
+    const user = await ClientUser.findOne({ $or: [{ uids: uid }, { customerId: uid }] });
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json({ success: true, user });
   } catch (err) {
@@ -213,7 +213,7 @@ exports.updateProfile = async (req, res) => {
     if (gender !== undefined) updates.gender = gender;
 
     const updatedUser = await ClientUser.findOneAndUpdate(
-      { uids: uid },
+      { $or: [{ uids: uid }, { customerId: uid }] },
       { $set: updates },
       { new: true }
     );
@@ -229,7 +229,7 @@ exports.updateProfile = async (req, res) => {
 exports.deleteAccount = async (req, res) => {
   try {
     const { uid } = req.params;
-    const result = await ClientUser.findOneAndDelete({ uids: uid });
+    const result = await ClientUser.findOneAndDelete({ $or: [{ uids: uid }, { customerId: uid }] });
     if (!result) return res.status(404).json({ error: 'User not found' });
 
     await ProductReview.deleteMany({ uid: { $in: result.uids } });
@@ -243,9 +243,9 @@ exports.deleteAccount = async (req, res) => {
 
 exports.getAddresses = async (req, res) => {
   try {
-    const user = await ClientUser.findOne({ uids: req.params.uid });
+    const user = await ClientUser.findOne({ $or: [{ uids: req.params.uid }, { customerId: req.params.uid }] });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ success: true, addresses: user.addresses || [] });
+    res.json({ success: true, addresses: user.addresses || [], user });
   } catch (err) {
     console.error('❌ getAddresses error:', err);
     res.status(500).json({ error: 'Server error' });
@@ -254,7 +254,7 @@ exports.getAddresses = async (req, res) => {
 
 exports.addAddress = async (req, res) => {
   try {
-    const user = await ClientUser.findOne({ uids: req.params.uid });
+    const user = await ClientUser.findOne({ $or: [{ uids: req.params.uid }, { customerId: req.params.uid }] });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (req.body.isDefault) {
@@ -274,7 +274,7 @@ exports.addAddress = async (req, res) => {
 exports.updateAddress = async (req, res) => {
   try {
     const { uid, addrId } = req.params;
-    const user = await ClientUser.findOne({ uids: uid });
+    const user = await ClientUser.findOne({ $or: [{ uids: uid }, { customerId: uid }] });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (req.body.isDefault) {
@@ -298,7 +298,7 @@ exports.updateAddress = async (req, res) => {
 exports.deleteAddress = async (req, res) => {
   try {
     const { uid, addrId } = req.params;
-    const user = await ClientUser.findOne({ uids: uid });
+    const user = await ClientUser.findOne({ $or: [{ uids: uid }, { customerId: uid }] });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const addressToDelete = user.addresses.find(a => String(a.id || a._id) === String(addrId));

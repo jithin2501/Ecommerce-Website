@@ -23,8 +23,9 @@ export default function AddressSidebar({ isOpen, onClose, onSelectAddress }) {
       if (token && userJson) {
         try {
           const user = JSON.parse(userJson);
-          console.log("AddressSidebar: Fetching for customerId:", user.customerId);
-          const res = await authFetch(`/api/client-auth/addresses/${user.customerId}`);
+          const identifier = user.customerId || user._id || user.uid;
+          console.log("AddressSidebar: Fetching for identifier:", identifier);
+          const res = await authFetch(`/api/client-auth/addresses/${identifier}`);
           const data = await res.json();
           console.log("AddressSidebar: Data received:", data);
           if (data.success) setAddresses(data.addresses || []);

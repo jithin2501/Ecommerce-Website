@@ -49,7 +49,8 @@ export default function PersonInformation() {
 
       try {
         const user = JSON.parse(userJson);
-        const res = await authFetch(`/api/client-auth/profile/${user.customerId}`);
+        const identifier = user.customerId || user._id || user.uid;
+        const res = await authFetch(`/api/client-auth/profile/${identifier}`);
         const data = await res.json();
         
         if (data.success) {
@@ -82,9 +83,9 @@ export default function PersonInformation() {
     const userJson = localStorage.getItem('clientUser');
     if (!userJson) return;
     const user = JSON.parse(userJson);
-
+    const identifier = user.customerId || user._id || user.uid;
     try {
-      const res = await authFetch(`/api/client-auth/profile/${user.customerId}`, {
+      const res = await authFetch(`/api/client-auth/profile/${identifier}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
