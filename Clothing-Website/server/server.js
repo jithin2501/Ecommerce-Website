@@ -17,6 +17,7 @@ const clientRoutes = require('./routers/clientRoutes');
 const clientManagementRoutes = require('./routers/clientManagementRoutes');
 const paymentRouter = require('./routers/paymentRouter');
 const supportRouter = require('./routers/supportRouter');
+const aiRouter = require('./routers/aiRouter');
 const startCronJobs = require('./cronJobs');
 const { clientAuthLimiter, generalLimiter } = require('./middleware/rateLimiter');
 
@@ -88,6 +89,7 @@ app.use('/api/client-auth', clientRoutes);
 app.use('/api/admin/clients', clientManagementRoutes);
 app.use('/api/payment', paymentRouter);
 app.use('/api/support', supportRouter);
+app.use('/api/ai', aiRouter);
 
 app.get('/', (req, res) => res.json({ message: 'Sumathi Trends API running.' }));
 

@@ -544,7 +544,69 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="pdp-accordion-block">
-            <h3 className="pdp-accordion-heading">Description</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h3 className="pdp-accordion-heading" style={{ margin: 0 }}>Description</h3>
+              <button 
+                type="button" 
+                className="pdp-ai-btn"
+                onClick={async () => {
+                  if (!product?.name) {
+                    alert('Please ensure the product has a name first.');
+                    return;
+                  }
+                  
+                  const btn = document.activeElement;
+                  const originalText = btn.innerText;
+                  btn.innerText = 'Generating...';
+                  btn.disabled = true;
+
+                  try {
+                    // We call our backend AI route
+                    const res = await fetch(`${API}/ai/generate-description`, {
+                      method: 'POST',
+                      headers: { ...authHdrs(), 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        name: product.name,
+                        category: product.category,
+                        subCategory: product.subCategory,
+                        highlights: highlights.filter(h => h.label && h.value)
+                      })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      setDescription(data.description);
+                    } else {
+                      alert(data.error || 'AI generation failed. Please try again.');
+                    }
+                  } catch (err) {
+                    console.error('AI Error:', err);
+                    alert('Could not connect to AI service.');
+                  } finally {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                  }
+                }}
+                style={{
+                  padding: '4px 12px',
+                  background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '20px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 10px rgba(168, 85, 247, 0.2)'
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                AI GENERATE
+              </button>
+            </div>
             <textarea className="pdp-textarea" rows={5} placeholder="Enter product description…" value={description} onChange={e => setDescription(e.target.value)} />
           </div>
 
