@@ -140,7 +140,6 @@ export default function Sidebar({ activeNav, setActiveNav, activeSubNav, setActi
         </div>
       </div>
 
-      <div className="sidebar-spacer" />
 
       {/* Contact Support — no border below */}
       <div className="nav-section nav-section-last">

@@ -9,7 +9,7 @@ function PrivacyPolicyContent() {
   return (
     <div className="policy-page-body">
       <p className="policy-page-intro">
-        This Privacy Policy describes how Sumathi Trends collects, uses, and
+        This Privacy Policy describes how Trendora Trends collects, uses, and
         protects your information when you use our website.
       </p>
 
@@ -107,7 +107,7 @@ function TermsConditionsContent() {
       <section>
         <h3>1. General</h3>
         <p>
-          Sumathi Trends operates this website. By accessing it, you agree to be
+          Trendora Trends operates this website. By accessing it, you agree to be
           bound by these terms.
         </p>
       </section>
@@ -171,7 +171,7 @@ function TermsConditionsContent() {
       <section>
         <h3>9. Intellectual Property</h3>
         <p>
-          All content on this website is owned by Sumathi Trends and cannot be
+          All content on this website is owned by Trendora Trends and cannot be
           used without permission.
         </p>
       </section>
@@ -203,7 +203,7 @@ function RefundPolicyContent() {
   return (
     <div className="policy-page-body">
       <p className="policy-page-intro">
-        At Sumathi Trends, we maintain a strict{" "}
+        At Trendora Trends, we maintain a strict{" "}
         <strong>No Refund and No Cancellation Policy</strong>.
       </p>
 

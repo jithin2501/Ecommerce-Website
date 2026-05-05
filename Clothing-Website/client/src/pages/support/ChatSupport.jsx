@@ -340,7 +340,7 @@ export default function ChatSupport() {
                 <img src="/images/logo/logo.png" alt="ST" className="cs-logo-img" />
               </div>
               <div className="cs-header-info">
-                <div className="cs-header-name">Sumathi Trends Support</div>
+                <div className="cs-header-name">Trendora Trends Support</div>
                 <div className="cs-header-status"><span className="cs-online-dot" /> Online</div>
               </div>
               <button className="cs-header-close" onClick={() => navigate(-1)}>✕</button>

@@ -4,10 +4,9 @@
 .hero-section {
   width: 100%;
   padding: 0 0 40px;
-  margin-top: -10px;
+  margin-top: -40px;
   display: flex;
   align-items: flex-start;
-
 }
 
 .hero-section .section-inner {

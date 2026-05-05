@@ -56,10 +56,10 @@ export default function SupportHub() {
   return (
     <div className="sh-page">
       <SEO 
-        title="Support Hub"
-        description="Welcome to Sumathi Trends Support Hub. Find help with your orders, track shipments, and get answers to your questions about our premium kids products."
-        keywords="Sumathi Trends support, kids clothing help, order tracking Bengaluru, children fashion assistance"
-        url="https://sumathitrends.com/support"
+        title="Support Hub | Trendora Trends"
+        description="Welcome to Trendora Trends Support Hub. Find help with your orders, track shipments, and get answers to your questions about our premium kids products."
+        keywords="Trendora Trends support, kids clothing help, order tracking Bengaluru, children fashion assistance"
+        url="https://trendoratrends.com/support"
       />
       <div className="sh-container">
 
@@ -77,7 +77,7 @@ export default function SupportHub() {
             <div className="sh-mobile-header">
               <button className="mobile-back-btn" onClick={() => navigate('/account')}>
               </button>
-              <h1 className="sh-hero-title">Sumathi Trends Support Hub</h1>
+              <h1 className="sh-hero-title">Trendora Trends Support Hub</h1>
             </div>
             <p className="sh-hero-sub">Experience seamless assistance for your little one's wardrobe.</p>
             <div className="sh-search-wrap">

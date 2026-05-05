@@ -5,12 +5,13 @@
 
 .cs-container {
   /* Inherit standard sh-container styles */
-  height: calc(100vh - 120px);
-  min-height: 550px;
+  min-height: calc(100vh - 120px);
+  margin-bottom: 80px;
 }
 
 .cs-container .sidebar {
-  height: 100%;
+  height: auto;
+  min-height: 100%;
   flex-shrink: 0;
   width: 280px;
   min-width: 280px;
