@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const razorpay = require('../conf/razorpay');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const { uploadToCloudinary } = require('../conf/cloudinary');
 
 const FREE_SHIPPING_THRESHOLD = 0; // Everything is Free Shipping now!
 const GIFT_WRAP_COST = 50;
@@ -253,6 +254,26 @@ exports.syncTrackingStatus = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+exports.uploadGiftVideo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No video file provided' });
+    }
+
+    // Use our Cloudinary helper
+    // 'gift-videos' is the folder name in Cloudinary
+    const videoUrl = await uploadToCloudinary(req.file, 'gift-videos');
+
+    res.json({
+      success: true,
+      videoUrl
+    });
+  } catch (error) {
+    console.error('Gift video upload error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Failed to upload video' });
   }
 };
 

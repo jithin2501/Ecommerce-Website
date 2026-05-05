@@ -1,5 +1,11 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 30 * 1024 * 1024 } // 30MB limit for videos
+});
 const paymentCtrl = require('../controllers/paymentController');
 const {
     protect,
@@ -13,6 +19,7 @@ const { paymentLimiter } = require('../middleware/rateLimiter');
 router.post('/create-order', protectClient, paymentLimiter, paymentCtrl.createOrder);
 router.post('/verify-payment', protectClient, paymentLimiter, paymentCtrl.verifyPayment);
 router.post('/calculate-summary', protectClient, paymentLimiter, paymentCtrl.calculateSummary);
+router.post('/upload-gift-video', upload.single('video'), paymentCtrl.uploadGiftVideo);
 router.get('/gift/:hash', paymentCtrl.getOrderByGiftHash);
 
 // Admin-only — protected by JWT (Allowed for all admins with permission)

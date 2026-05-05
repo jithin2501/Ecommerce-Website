@@ -22,8 +22,8 @@
 
   /* Do NOT hide the parent containers like admin-main or dash-container entirely, 
      as that hides the invoice too. Instead, hide THEIR CONTENTS. */
-  .od-page, .navbar, .footer, .sidebar, .main-header, .whatsapp-float,
-  .admin-sidebar, .admin-mobile-header {
+  .od-page, .app-navbar, .footer, .sidebar, .main-header, .whatsapp-float,
+  .admin-sidebar, .admin-mobile-header, .premium-footer {
     display: none !important;
   }
 
@@ -80,12 +80,21 @@
   margin-bottom: 30px;
 }
 
+.inv-logo {
+  height: 80px;
+  width: auto;
+  display: block;
+  margin: 0 auto 5px;
+  object-fit: contain;
+}
+
 .inv-shop-name {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
-  margin: 0;
+  margin: 0 0 15px;
   color: #000;
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .inv-address {

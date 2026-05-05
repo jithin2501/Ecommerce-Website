@@ -16,6 +16,7 @@ function OrderInvoice({ order }) {
   return (
     <div className="invoice-container" id="printable-invoice">
       <div className="inv-header">
+        <img src="/images/logo/logo.png" alt="Sumathi Trends" className="inv-logo" />
         <h1 className="inv-shop-name">Sumathi Trends</h1>
         <p className="inv-address">
           No.52, Saxena complex, Kodigehalli Main Rd,<br/>

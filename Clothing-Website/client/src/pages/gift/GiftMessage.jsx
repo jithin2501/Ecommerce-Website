@@ -90,15 +90,15 @@ export default function GiftMessage() {
           borderRadius: '16px', 
           overflow: 'hidden', 
           background: '#000',
-          aspectRatio: '9/16', // Typical portrait video
           boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-          marginBottom: '30px'
+          marginBottom: '30px',
+          maxHeight: '80vh' // Ensure it doesn't get too tall on desktop
         }}>
           {data.giftVideoUrl ? (
             <video 
               src={data.giftVideoUrl} 
               controls 
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              style={{ width: '100%', height: 'auto', display: 'block' }}
               autoPlay
             />
           ) : (
@@ -112,33 +112,36 @@ export default function GiftMessage() {
         </div>
 
         <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '20px' }}>
-          <p style={{ color: '#94a3b8', fontSize: '12px' }}>
+          <p style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '8px' }}>
             Sent on {new Date(data.createdAt).toLocaleDateString('en-IN', {
               day: 'numeric', month: 'long', year: 'numeric'
             })}
           </p>
-          <img 
-            src="/logo.png" 
-            alt="Sumathi Trends" 
-            style={{ height: '24px', marginTop: '15px', opacity: 0.6 }} 
-          />
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Video Link</p>
+            <a 
+              href={data.giftVideoUrl} 
+              target="_blank" 
+              rel="noreferrer" 
+              style={{ color: '#b8860b', fontSize: '11px', wordBreak: 'break-all', textDecoration: 'none', opacity: 0.8 }}
+            >
+              {data.giftVideoUrl}
+            </a>
+          </div>
+          <a 
+            href="/" 
+            style={{ 
+              color: '#b8860b', 
+              textDecoration: 'none', 
+              fontSize: '14px', 
+              fontWeight: 600,
+              borderBottom: '1.5px solid #b8860b'
+            }}
+          >
+            Visit Sumathi Trends
+          </a>
         </div>
       </div>
-
-      <footer style={{ marginTop: '40px', textAlign: 'center' }}>
-        <a 
-          href="/" 
-          style={{ 
-            color: '#b8860b', 
-            textDecoration: 'none', 
-            fontSize: '14px', 
-            fontWeight: 600,
-            borderBottom: '1.5px solid #b8860b'
-          }}
-        >
-          Visit Sumathi Trends
-        </a>
-      </footer>
     </div>
   );
 }

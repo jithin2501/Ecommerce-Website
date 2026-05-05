@@ -154,16 +154,28 @@
 
 .om-amount-cell {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
+}
+
+.om-amount-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .om-gift-tag {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: #10b981;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.om-video-tag {
+  font-size: 0.72rem;
+  color: #b8860b;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .om-tracking-cell {
@@ -535,10 +547,13 @@
   padding: 1.5rem 2rem;
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 12px;
 }
 
-.om-print-btn {
-  width: 100%;
+.om-print-btn,
+.om-deliver-btn {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -554,9 +569,24 @@
   transition: all 0.2s;
 }
 
+.om-deliver-btn {
+  background: #10b981;
+}
+
 .om-print-btn:hover {
   background: #334155;
   transform: translateY(-2px);
+}
+
+.om-deliver-btn:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.om-deliver-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .no-orders-msg {

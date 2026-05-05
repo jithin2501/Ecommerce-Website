@@ -217,7 +217,10 @@ export default function OrderManagement() {
                   <td>
                     <div className="om-amount-cell">
                       <span className="om-amount">₹{o.amount.toLocaleString()}</span>
-                      {o.giftWrapping && <span className="om-gift-tag">(Gift)</span>}
+                      <div className="om-amount-tags">
+                        {o.giftWrapping && <span className="om-gift-tag">(Gift)</span>}
+                        {o.isGift && <span className="om-video-tag">(Video Message)</span>}
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -360,6 +363,112 @@ function OrderDrawer({ order, onClose, onSync, onMarkDelivered, syncing }) {
     printWindow.document.close();
   };
 
+  const handlePrintQRCard = () => {
+    const giftUrl = `${window.location.origin}/gift/${order.giftHash}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(giftUrl)}`;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Gift Card - #${order.displayId}</title>
+          <style>
+            @page { size: auto; margin: 0; }
+            body { 
+              margin: 0; 
+              display: flex; 
+              justify-content: center; 
+              align-items: center; 
+              height: 100vh; 
+              background: #fff;
+              font-family: 'Inter', -apple-system, sans-serif;
+            }
+            .card {
+              width: 380px;
+              height: 480px;
+              border: 1px solid #fde68a;
+              border-radius: 32px;
+              background: #fff;
+              padding: 40px;
+              text-align: center;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+            }
+            .gift-icon { font-size: 52px; margin-bottom: 12px; }
+            .title { font-size: 24px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+            .subtitle { font-size: 15px; color: #b45309; margin-bottom: 30px; font-weight: 600; }
+            .qr-wrap { 
+              background: #fff; 
+              padding: 16px; 
+              border-radius: 20px; 
+              border: 2px solid #fef3c7; 
+              display: inline-block;
+              box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            }
+            .qr-img { width: 180px; height: 180px; display: block; }
+            .scan-me { 
+              margin-top: 18px; 
+              font-size: 20px; 
+              font-weight: 900; 
+              color: #92400e; 
+              letter-spacing: 2px;
+              text-transform: uppercase;
+            }
+            .from-section { margin-top: 30px; }
+            .from-text { font-size: 13px; color: #64748b; margin-bottom: 4px; }
+            .footer-line { 
+              font-size: 11px; 
+              color: #b45309; 
+              font-weight: 700;
+              letter-spacing: 0.5px;
+              margin-top: 4px;
+              padding-top: 0;
+              border-top: none;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div>
+              <div class="gift-icon">🎁</div>
+              <div class="title">A Gift for You!</div>
+              <div class="subtitle">A special video message is waiting...</div>
+            </div>
+            
+            <div>
+              <div class="qr-wrap">
+                <img src="${qrUrl}" class="qr-img" id="qrImage" />
+              </div>
+              <div class="scan-me">SCAN ME</div>
+            </div>
+            
+            <div class="from-section">
+              <div class="from-text">From: <strong>${order.userName || 'Someone Special'}</strong></div>
+              <div class="footer-line">sumathitrends.com</div>
+            </div>
+          </div>
+          <script>
+            window.onload = function() {
+              const img = document.getElementById('qrImage');
+              if (img.complete) {
+                window.print();
+                window.close();
+              } else {
+                img.onload = function() {
+                  window.print();
+                  window.close();
+                };
+              }
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   return (
     <div className="om-drawer-overlay" onClick={onClose}>
       <aside className="om-drawer" onClick={e => e.stopPropagation()}>
@@ -422,23 +531,43 @@ function OrderDrawer({ order, onClose, onSync, onMarkDelivered, syncing }) {
                   </div>
                   <div>
                     <p style={{ fontSize: '13px', fontWeight: 700, color: '#92400e', marginBottom: '4px' }}>Scan to watch video</p>
-                    <p style={{ fontSize: '11px', color: '#b45309', marginBottom: '8px' }}>Include this QR code in the package</p>
-                    <a 
-                      href={`${window.location.origin}/gift/${order.giftHash}`} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      style={{ 
-                        fontSize: '11px', 
-                        color: '#fff', 
-                        background: '#b8860b', 
-                        padding: '4px 10px', 
-                        borderRadius: '4px', 
-                        textDecoration: 'none',
-                        fontWeight: 600
-                      }}
-                    >
-                      Preview Message
-                    </a>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <a 
+                        href={`${window.location.origin}/gift/${order.giftHash}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        style={{ 
+                          fontSize: '11px', 
+                          color: '#b8860b', 
+                          background: '#fff', 
+                          padding: '5px 12px', 
+                          borderRadius: '6px', 
+                          textDecoration: 'none',
+                          fontWeight: 700,
+                          border: '1px solid #b8860b'
+                        }}
+                      >
+                        Preview Message
+                      </a>
+                      <button 
+                        onClick={handlePrintQRCard}
+                        style={{ 
+                          fontSize: '11px', 
+                          color: '#fff', 
+                          background: '#b8860b', 
+                          padding: '5px 12px', 
+                          borderRadius: '6px', 
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <Printer size={12} /> Print QR Card
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -464,19 +593,6 @@ function OrderDrawer({ order, onClose, onSync, onMarkDelivered, syncing }) {
               className="om-deliver-btn" 
               onClick={onMarkDelivered}
               disabled={syncing}
-              style={{
-                marginLeft: 'auto',
-                background: '#10b981',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
             >
               <CheckCircle size={16} /> {syncing ? 'Processing...' : 'Mark Delivered'}
             </button>

@@ -20,28 +20,25 @@ export default function GiftVideoManager({ onVideoUpload, onRemove }) {
 
     setUploading(true);
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'ml_default'); // Try 'ml_default' or your own unsigned preset
+    formData.append('video', file);
 
     try {
-      // Direct upload to Cloudinary (for simplicity in this demo)
-      // Note: In production, you'd usually use a secure signed upload or a backend proxy
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/video/upload`, {
+      // Upload via our backend instead of direct Cloudinary to avoid "preset not found" errors
+      const res = await fetch('/api/payment/upload-gift-video', {
         method: 'POST',
         body: formData,
       });
       const data = await res.json();
-      if (data.secure_url) {
-        setVideoUrl(data.secure_url);
-        onVideoUpload(data.secure_url);
-        setPreview(data.secure_url);
+      if (data.success && data.videoUrl) {
+        setVideoUrl(data.videoUrl);
+        onVideoUpload(data.videoUrl);
+        setPreview(data.videoUrl);
       } else {
-        alert('Cloudinary Error: ' + (data.error?.message || 'Unknown error. Check console.'));
+        alert('Upload Error: ' + (data.error || 'Unknown error. Check console.'));
       }
     } catch (err) {
       console.error('Upload failed', err);
-      const errorMsg = err.message || 'Check your Cloudinary Cloud Name and Upload Preset.';
-      alert('Upload failed: ' + errorMsg);
+      alert('Upload failed: ' + (err.message || 'Check your connection.'));
     } finally {
       setUploading(false);
     }
