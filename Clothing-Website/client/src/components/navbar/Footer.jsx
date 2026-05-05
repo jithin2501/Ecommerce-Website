@@ -1,7 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../../firebase';
 import '../../styles/navbar/Footer.css';
 
 export default function Footer() {
@@ -9,10 +7,17 @@ export default function Footer() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-    });
-    return () => unsubscribe();
+    const checkUser = () => {
+      const userJson = localStorage.getItem('clientUser');
+      setUser(userJson ? JSON.parse(userJson) : null);
+    };
+    checkUser();
+    window.addEventListener('storage', checkUser);
+    window.addEventListener('client_user_updated', checkUser);
+    return () => {
+      window.removeEventListener('storage', checkUser);
+      window.removeEventListener('client_user_updated', checkUser);
+    };
   }, []);
 
   const handleLegalClick = (e, path) => {

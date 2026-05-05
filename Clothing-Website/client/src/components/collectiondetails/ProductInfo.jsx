@@ -54,19 +54,15 @@ export default function ProductInfo({
     }
     const fetchEDD = async () => {
       setIsCheckingPin(true);
-      try {
-        const res = await fetch(`/api/shiprocket/check-pincode/${selectedAddress.pincode}`);
-        const data = await res.json();
-        if (data.success && data.estimatedDate) {
-          setDynamicDelivery(data.estimatedDate);
-        } else {
-          setDynamicDelivery(null);
-        }
-      } catch (err) {
-        setDynamicDelivery(null);
-      } finally {
+      // Simulated delivery calculation (random 3-7 days)
+      setTimeout(() => {
+        const days = 3 + Math.floor(Math.random() * 5);
+        const date = new Date();
+        date.setDate(date.getDate() + days);
+        const options = { day: 'numeric', month: 'short', weekday: 'short' };
+        setDynamicDelivery(date.toLocaleDateString('en-IN', options));
         setIsCheckingPin(false);
-      }
+      }, 500);
     };
     fetchEDD();
   }, [selectedAddress?.pincode]);
@@ -107,6 +103,13 @@ export default function ProductInfo({
       
       if (!isGoogle && !isPhone && (!userInfo.name || !userInfo.phone)) {
         alert("Please complete your Personal Information in your account before adding to cart.");
+        navigate('/account/profile');
+        return false;
+      }
+      
+      const customerPhone = userInfo.phone;
+      if (!customerPhone || customerPhone.trim() === '' || customerPhone === '+91') {
+        alert('Please update your address with a valid 10-digit phone number for delivery.');
         navigate('/account/profile');
         return false;
       }

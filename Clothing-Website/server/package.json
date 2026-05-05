@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1013.0",
-    "axios": "^1.14.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^1.41.3",
     "cookie-parser": "^1.4.7",
@@ -17,7 +16,6 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^8.3.2",
-    "firebase-admin": "^13.8.0",
     "helmet": "^8.1.0",
     "ioredis": "^5.10.1",
     "jsonwebtoken": "^9.0.3",

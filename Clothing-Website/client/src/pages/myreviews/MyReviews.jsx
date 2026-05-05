@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/sidebar/Sidebar';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import '../../styles/myreviews/MyReviews.css';
 
 export default function MyReviews() {
@@ -16,20 +14,23 @@ export default function MyReviews() {
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, []);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
+    const fetchData = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+
+      if (token && userJson) {
         try {
-          const idToken = await user.getIdToken();
-          const headers = { 'Authorization': `Bearer ${idToken}` };
+          const user = JSON.parse(userJson);
+          const headers = { 'Authorization': `Bearer ${token}` };
 
           // 1. Fetch user reviews
-          const revRes = await fetch(`/api/product-reviews/user/${user.uid}`, { headers });
+          const revRes = await fetch(`/api/product-reviews/user/${user.customerId}`, { headers });
           const revData = await revRes.json();
           const userReviews = revData.success ? revData.data : [];
           setReviews(userReviews);
 
           // 2. Fetch user orders to find things to review
-          const ordRes = await fetch(`/api/payment/user-orders/${user.uid}`, { headers });
+          const ordRes = await fetch(`/api/payment/user-orders/${user.customerId}`, { headers });
           const ordData = await ordRes.json();
 
           if (ordData.success) {
@@ -63,20 +64,22 @@ export default function MyReviews() {
         }
       }
       setLoading(false);
-    });
-    return () => unsub();
+    };
+
+    fetchData();
+    window.addEventListener('client_user_updated', fetchData);
+    return () => window.removeEventListener('client_user_updated', fetchData);
   }, []);
 
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm("Are you sure you want to delete this review? This action cannot be undone.")) return;
     try {
-      const user = auth.currentUser;
-      if (!user) return;
-      const idToken = await user.getIdToken();
+      const token = localStorage.getItem('clientToken');
+      if (!token) return;
       
       const res = await fetch(`/api/product-reviews/${reviewId}`, { 
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${idToken}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.success) {

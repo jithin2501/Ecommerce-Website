@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const razorpay = require('../conf/razorpay');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const shiprocketService = require('../services/shiprocket');
 
 const FREE_SHIPPING_THRESHOLD = 0; // Everything is Free Shipping now!
 const GIFT_WRAP_COST = 50;
@@ -87,7 +86,7 @@ exports.createOrder = async (req, res) => {
 
     let finalEmail = userEmail || shippingAddress?.email;
     if (!finalEmail && userId && userId !== 'guest') {
-      const client = await ClientUser.findOne({ uids: userId }).lean();
+      const client = await ClientUser.findOne({ customerId: userId }).lean();
       if (client?.email) finalEmail = client.email;
     }
 
@@ -184,18 +183,11 @@ exports.verifyPayment = async (req, res) => {
           }
         } catch (stockError) { }
 
-        const srResponse = await shiprocketService.createOrder(updatedOrder);
-        if (srResponse.success) {
-          updatedOrder.shiprocketOrderId = srResponse.shiprocketOrderId;
-          updatedOrder.shiprocketShipmentId = srResponse.shiprocketShipmentId;
-          updatedOrder.trackingLink = shiprocketService.generateTrackingLink(srResponse.shiprocketShipmentId);
-        } else {
-          updatedOrder.shiprocketError = JSON.stringify(srResponse.error);
-        }
+        // SR Removed: Manual delivery logic now used
         await updatedOrder.save();
       }
 
-      return res.json({ success: true, message: 'Payment verified successfully and order pushed to Shiprocket' });
+      return res.json({ success: true, message: 'Payment verified successfully' });
     } else {
       return res.status(400).json({ success: false, error: 'Invalid payment signature' });
     }
@@ -210,33 +202,9 @@ const ClientUser = require('../models/ClientUser');
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 }).lean();
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const pendingAutoSync = orders.filter(o => o.status === 'success' && !o.shiprocketOrderId && o.createdAt > oneDayAgo);
-
-    if (pendingAutoSync.length > 0) {
-      for (const o of pendingAutoSync) {
-        try {
-          const srResponse = await shiprocketService.createOrder(o);
-          if (srResponse.success) {
-            const doc = await Order.findById(o._id);
-            doc.shiprocketOrderId = srResponse.shiprocketOrderId;
-            doc.shiprocketShipmentId = srResponse.shiprocketShipmentId;
-            doc.trackingLink = shiprocketService.generateTrackingLink(srResponse.shiprocketShipmentId);
-            await doc.save();
-            const target = orders.find(orig => orig._id.toString() === o._id.toString());
-            if (target) {
-              target.shiprocketOrderId = srResponse.shiprocketOrderId;
-              target.shiprocketShipmentId = srResponse.shiprocketShipmentId;
-              target.trackingStatus = 'NEW';
-            }
-          }
-        } catch (err) { }
-      }
-    }
-
     const joinedData = await Promise.all(orders.map(async (o) => {
       if (o.userId && o.userId !== 'guest') {
-        const userDoc = await ClientUser.findOne({ uids: o.userId }).lean();
+        const userDoc = await ClientUser.findOne({ customerId: o.userId }).lean();
         if (userDoc) {
           o.user = {
             id: userDoc.customerId || 'N/A',
@@ -275,73 +243,54 @@ exports.syncTrackingStatus = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Order not found' });
     }
 
-    let tracking = { success: false };
-
-    if (order.shiprocketShipmentId) {
-      tracking = await shiprocketService.getTrackingDetails(order.shiprocketShipmentId);
-    }
-
-    if (!tracking.success || !tracking.data) {
-      tracking = await shiprocketService.getTrackingByOrderId(order.displayId);
-    }
-
-    if (tracking.success && tracking.data) {
-      const td = tracking.data;
-
-      order.trackingStatus = td.track_status || order.trackingStatus;
-      order.trackingActivities = (td.shipment_track_activities || []).sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      // Auto-detect delivery from activities if not already marked
-      if (order.trackingStatus?.toUpperCase() !== 'DELIVERED') {
-        const hasDeliveredActivity = order.trackingActivities.some(a => {
-          const s = a.status?.toLowerCase() || '';
-          const act = a.activity?.toLowerCase() || '';
-          return s.includes('delivered') || s.includes('delivery_update') || act.includes('delivered to consignee');
-        });
-        if (hasDeliveredActivity) {
-          order.trackingStatus = 'DELIVERED';
-        }
-      }
-
-      const results = {
-        success: true,
-        trackingStatus: order.trackingStatus,
-        courier: td.courier_name || 'Logistic Partner',
-        awb: td.awb_code || '',
-        activities: order.trackingActivities
-      };
-
-      await order.save();
-      return res.json(results);
-    }
-
-    res.json({ success: false, message: 'Tracking info not yet available from Shiprocket' });
+    // Since SR is removed, we just return what's in the DB
+    res.json({
+      success: true,
+      trackingStatus: order.trackingStatus,
+      courier: 'Sumathi Express',
+      awb: order.displayId,
+      activities: order.trackingActivities || []
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
-exports.manualSyncToShiprocket = async (req, res) => {
+exports.markAsDelivered = async (req, res) => {
   try {
     const { orderId } = req.params;
     const order = await Order.findById(orderId);
 
     if (!order) return res.status(404).json({ success: false, error: 'Order not found' });
-    if (order.shiprocketOrderId) return res.status(400).json({ success: false, error: 'Order already exists in Shiprocket' });
 
-    const srResponse = await shiprocketService.createOrder(order);
-    if (srResponse.success) {
-      order.shiprocketOrderId = srResponse.shiprocketOrderId;
-      order.shiprocketShipmentId = srResponse.shiprocketShipmentId;
-      order.shiprocketError = null;
-      order.trackingLink = shiprocketService.generateTrackingLink(srResponse.shiprocketShipmentId);
-      await order.save();
-      return res.json({ success: true, message: 'Successfully pushed to Shiprocket', srOrderId: srResponse.shiprocketOrderId });
-    } else {
-      order.shiprocketError = JSON.stringify(srResponse.error);
-      await order.save();
-      return res.status(400).json({ success: false, error: srResponse.error });
-    }
+    // Random Tracking Messages as requested
+    const mockActivities = [
+      { status: 'DELIVERED', activity: 'Delivered Sat, Apr 25, 26', date: '2026-04-25T11:58:00', location: 'BheemanadyMDH_BMY NILESHWAR' },
+      { status: 'DELIVERY_UPDATE', activity: 'Out For Delivery Update Sat, Apr 25, 26', date: '2026-04-25T10:30:00', location: 'BheemanadyMDH_BMY NILESHWAR' },
+      { status: 'OFD', activity: 'Out for Delivery Sat, Apr 25, 26', date: '2026-04-25T10:15:00', location: 'BheemanadyMDH_BMY NILESHWAR' },
+      { status: 'REPROMISE', activity: 'Delivery Rescheduled Fri, Apr 24, 26', date: '2026-04-24T22:36:00', location: '' },
+      { status: 'UNDELIVERED_ATTEMPTED', activity: 'Delivery Attempted Fri, Apr 24, 26', date: '2026-04-24T20:09:00', location: 'BheemanadyMDH_BMY NILESHWAR' },
+      { status: 'RESCHEDULE_REQUEST', activity: 'Undelivered Update Fri, Apr 24, 26', date: '2026-04-24T18:31:00', location: 'BheemanadyMDH_BMY NILESHWAR' },
+      { status: 'DELIVERY_UPDATE', activity: 'Out For Delivery Update Fri, Apr 24, 26', date: '2026-04-24T11:03:00', location: 'BheemanadyMDH_BMY NILESHWAR' },
+      { status: 'OFD', activity: 'Out for Delivery Fri, Apr 24, 26', date: '2026-04-24T11:03:00', location: 'BheemanadyMDH_BMY NILESHWAR' },
+      { status: 'RECEIVED_AT_DH', activity: 'Reached Destination Hub Fri, Apr 24, 26', date: '2026-04-24T08:04:00', location: 'BheemanadyMDH_BMY NILESHWAR' },
+      { status: 'EXPECTED', activity: 'Scheduled for Delivery Fri, Apr 24, 26', date: '2026-04-24T06:47:00', location: 'BheemanadyMDH_BMY NILESHWAR' },
+      { status: 'RECEIVED_AT_DH', activity: 'Reached Destination Hub Thu, Apr 23, 26', date: '2026-04-23T23:58:00', location: 'SASVellurTrikapurODH_VTR NILESHWAR' },
+      { status: 'EXPECTED', activity: 'Scheduled for Delivery Thu, Apr 23, 26', date: '2026-04-23T11:04:00', location: 'SASVellurTrikapurODH_VTR NILESHWAR' },
+      { status: 'MH_RECEIVED', activity: 'Reached Processing Center Thu, Apr 23, 26', date: '2026-04-23T08:17:00', location: 'Motherhub_ANJ BENGALURU' },
+      { status: 'SHIPPED', activity: 'Shipped Thu, Apr 23, 26 - Dispatched to Ekart Logistics', date: '2026-04-23T04:37:00', location: 'BheemanadyMDH_BMY' },
+      { status: 'MH_RECEIVED', activity: 'Reached Processing Center Thu, Apr 23, 26', date: '2026-04-23T04:30:00', location: 'Motherhub_ANJ BENGALURU' },
+      { status: 'LPD_GENERATED', activity: 'Shipment Ready Wed, Apr 22, 26', date: '2026-04-22T15:16:00', location: 'Yelahanka Pickup Hub' },
+      { status: 'PICKED_UP', activity: 'Shipment Pickup Complete Wed, Apr 22, 26', date: '2026-04-22T15:16:00', location: 'Yelahanka Pickup Hub' },
+      { status: 'OUT_FOR_PICKUP', activity: 'Pickup Out For Pickup Wed, Apr 22, 26', date: '2026-04-22T10:51:00', location: 'Yelahanka Pickup Hub' },
+      { status: 'CREATED', activity: 'Order Created Tue, Apr 21, 26', date: '2026-04-21T11:19:00', location: 'Fkl-BLRAnjaniHoskote' },
+    ];
+
+    order.trackingStatus = 'DELIVERED';
+    order.trackingActivities = mockActivities;
+    await order.save();
+
+    res.json({ success: true, message: 'Order marked as delivered with simulated tracking data' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

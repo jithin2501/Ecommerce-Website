@@ -403,27 +403,27 @@
   color: #64748b;
 }
 
-/* ── SHIPROCKET ACTIVITY TRACKER ── */
-.shiprocket-tracker {
+/* ── ORDER ACTIVITY TRACKER ── */
+.order-tracker {
   display: flex;
   flex-direction: column;
   padding: 10px 0;
 }
 
-.sr-step {
+.tr-step {
   display: flex;
   gap: 16px;
   min-height: 80px;
 }
 
-.sr-dot-line {
+.tr-dot-line {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 12px;
 }
 
-.sr-dot {
+.tr-dot {
   width: 10px;
   height: 10px;
   background: #3b82f6; /* Changed to Blue for in-progress */
@@ -433,61 +433,61 @@
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.sr-step.delivered .sr-dot {
+.tr-step.delivered .tr-dot {
   background: #10b981; /* Green for delivered */
   box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.2);
 }
 
-.sr-step.delivered .sr-status {
+.tr-step.delivered .tr-status {
   color: #10b981;
 }
 
 
-.sr-line {
+.tr-line {
   flex: 1;
   width: 2px;
   background: #10b981;
 }
 
-.sr-info {
+.tr-info {
   flex: 1;
   padding-bottom: 25px;
 }
 
-.sr-label-row {
+.tr-label-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
 }
 
-.sr-status {
+.tr-status {
   font-size: 0.95rem;
   font-weight: 700;
   color: #1e293b;
   text-transform: capitalize;
 }
 
-.sr-date {
+.tr-date {
   font-size: 0.8rem;
   color: #64748b;
   font-weight: 500;
 }
 
-.sr-activity {
+.tr-activity {
   font-size: 0.85rem;
   color: #334155;
   margin: 4px 0;
   line-height: 1.4;
 }
 
-.sr-meta {
+.tr-meta {
   font-size: 0.75rem;
   color: #94a3b8;
   font-style: italic;
 }
 
-.sr-meta span {
+.tr-meta span {
   font-weight: 600;
   color: #64748b;
 }

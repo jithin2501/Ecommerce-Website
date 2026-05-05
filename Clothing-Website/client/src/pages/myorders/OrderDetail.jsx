@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import '../../styles/myorders/OrderDetail.css';
 import OrderInvoice from './OrderInvoice';
 import { authFetch } from '../../utils/authFetch';

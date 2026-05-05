@@ -113,21 +113,6 @@ export default function ManageAddresses() {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
 
-    setValidatingPin(true);
-    // ── STRICT: Shiprocket Pincode Check ──
-    try {
-      const pinRes = await fetch(`/api/shiprocket/check-pincode/${form.pincode}`);
-      const pinData = await pinRes.json();
-      if (!pinData.serviceable) {
-        alert(`Verification Failed: Shiprocket does not currently service pincode ${form.pincode}. Please provide a different address to proceed.`);
-        setValidatingPin(false);
-        return;
-      }
-    } catch (err) {
-      alert("Serviceability Check Error: We are currently unable to verify your pincode with Shiprocket. Please check your connection and try again.");
-      setValidatingPin(false);
-      return;
-    }
     setValidatingPin(false);
 
     const newAddrPart = {
@@ -393,19 +378,7 @@ export default function ManageAddresses() {
           if (matchedState) handleChange('state', matchedState);
           if (locality) handleChange('locality', locality);
 
-          // Step 2: Shiprocket serviceability check on the detected pincode
-          if (pincode && pincode.length === 6) {
-            try {
-              const pinRes = await fetch(`/api/shiprocket/check-pincode/${pincode}`);
-              const pinData = await pinRes.json();
-              if (!pinData.serviceable) {
-                alert(`Delivery Not Available: Shiprocket does not currently deliver to pincode ${pincode}. You can still save the address but delivery may not be possible.`);
-              }
-            } catch (pinErr) {
-              console.warn('Shiprocket serviceability check failed:', pinErr);
-              // Non-blocking — don't prevent form fill if this check fails
-            }
-          }
+          // Shiprocket check removed
 
         } catch (err) {
           console.error('Reverse geocoding failed:', err);

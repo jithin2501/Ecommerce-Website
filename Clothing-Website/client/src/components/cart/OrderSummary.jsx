@@ -3,12 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import '../../styles/cart/OrderSummary.css';
 
-import { auth } from '../../firebase';
-
 const API_BASE = '/api';
 
-const getAuthHeaders = async () => {
-  const token = auth.currentUser ? await auth.currentUser.getIdToken() : '';
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('clientToken') || '';
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
@@ -37,7 +35,7 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
     const fetchTotals = async () => {
       if (cartItems.length === 0) return;
       try {
-        const headers = await getAuthHeaders();
+        const headers = getAuthHeaders();
         const res = await fetch(`${API_BASE}/payment/calculate-summary`, {
           method: 'POST',
           headers,
@@ -87,7 +85,7 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
 
     const customerPhone = selectedAddress.phone || user.phone;
     if (!customerPhone || customerPhone.trim() === '' || customerPhone === '+91') {
-      alert('Please update your address with a valid 10-digit phone number. Shiprocket requires this for delivery.');
+      alert('Please update your address with a valid 10-digit phone number for delivery.');
       return;
     }
 
@@ -99,7 +97,7 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
     setLoading(true);
 
     try {
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
       const res = await fetch(`${API_BASE}/payment/create-order`, {
         method: 'POST',
         headers,
@@ -163,7 +161,7 @@ export default function OrderSummary({ subtotal, shipping, giftWrapping, giftCos
           console.log('Payment received from Razorpay:', response);
           setVerifying(true);
           try {
-            const vHeaders = await getAuthHeaders();
+            const vHeaders = getAuthHeaders();
             const verifyRes = await fetch(`${API_BASE}/payment/verify-payment`, {
               method: 'POST',
               headers: vHeaders,

@@ -86,17 +86,16 @@ export default function OrderManagement() {
     ordersRef.current = orders;
   }, [orders]);
 
-  // BACKGROUND SYNC: Automatically ask Shiprocket for updates every 60s for orders in progress
+  // BACKGROUND SYNC: Automatically refresh status from our server every 60s for orders in progress
   useEffect(() => {
     const syncInterval = setInterval(() => {
       const activeOrders = ordersRef.current.filter(o => 
-        o.shiprocketShipmentId && 
         o.trackingStatus?.toUpperCase() !== 'DELIVERED' &&
         o.trackingStatus?.toUpperCase() !== 'CANCELED'
       );
       
       activeOrders.forEach(o => handleSyncStatus(o._id));
-    }, 60000); // Check Shiprocket every 60 seconds
+    }, 60000);
 
     return () => clearInterval(syncInterval);
   }, []);
@@ -121,24 +120,27 @@ export default function OrderManagement() {
     }
   };
 
-  const handleManualSRSync = async (orderId) => {
-    if (!window.confirm('Try pushing this order to Shiprocket now?')) return;
+  const handleMarkDelivered = async (orderId) => {
+    if (!window.confirm('Mark this order as Delivered? This will generate simulated tracking messages.')) return;
     setSyncingId(orderId);
     try {
-      const res = await fetch(`/api/payment/manual-sync-sr/${orderId}`, { 
+      const res = await fetch(`/api/payment/mark-delivered/${orderId}`, { 
         method: 'POST',
-        headers: authHeaders() 
+        headers: {
+          ...authHeaders(),
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        } 
       });
       const data = await res.json();
       if (data.success) {
-        alert('Order successfully pushed to Shiprocket!');
-        fetchOrders(); // Refresh table to show new status/link
+        alert('Order marked as delivered!');
+        fetchOrders(); 
       } else {
-        alert('Shiprocket Error: ' + (data.error || 'Failed to sync'));
+        alert('Error: ' + (data.error || 'Failed to update'));
       }
     } catch (err) {
-      console.error('Manual sync error:', err);
-      alert('Network error while syncing');
+      console.error('Delivery error:', err);
+      alert('Network error');
     } finally {
       setSyncingId(null);
     }
@@ -258,6 +260,7 @@ export default function OrderManagement() {
           order={selectedOrder}
           onClose={() => setSelectedOrderId(null)}
           onSync={() => handleSyncStatus(selectedOrderId)}
+          onMarkDelivered={() => handleMarkDelivered(selectedOrderId)}
           syncing={syncingId === selectedOrderId}
         />
       )}
@@ -268,7 +271,7 @@ export default function OrderManagement() {
 /* ════════════════════════════════════
    ORDER DETAIL DRAWER (LIKE CLIENT MGMT)
    ════════════════════════════════════ */
-function OrderDrawer({ order, onClose, onSync, syncing }) {
+function OrderDrawer({ order, onClose, onSync, onMarkDelivered, syncing }) {
   const printRef = useRef();
 
   const handlePrint = () => {
@@ -444,9 +447,9 @@ function OrderDrawer({ order, onClose, onSync, syncing }) {
 
           {/* 5. Tracking Section (Last) */}
           <div className="om-drawer-section">
-            <h4 className="om-sect-title"><Truck size={16} /> Live Tracking</h4>
-            <ShiprocketActivityTracker 
-              activities={order.trackingPayload?.activities || order.trackingActivities || []} 
+            <h4 className="om-sect-title"><Truck size={16} /> Tracking History</h4>
+            <OrderActivityTracker 
+              activities={order.trackingActivities || []} 
               isSyncing={syncing}
             />
           </div>
@@ -456,13 +459,35 @@ function OrderDrawer({ order, onClose, onSync, syncing }) {
           <button className="om-print-btn" onClick={handlePrint}>
             <Printer size={16} /> Print
           </button>
+          {order.trackingStatus !== 'DELIVERED' && (
+            <button 
+              className="om-deliver-btn" 
+              onClick={onMarkDelivered}
+              disabled={syncing}
+              style={{
+                marginLeft: 'auto',
+                background: '#10b981',
+                color: 'white',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <CheckCircle size={16} /> {syncing ? 'Processing...' : 'Mark Delivered'}
+            </button>
+          )}
         </div>
       </aside>
     </div>
   );
 }
 
-function ShiprocketActivityTracker({ activities: rawActivities, isSyncing }) {
+function OrderActivityTracker({ activities: rawActivities, isSyncing }) {
   // 1. Filter internal metadata
   const activities = (rawActivities || []).filter(a => {
     const s = a.status?.toLowerCase() || '';
@@ -487,20 +512,20 @@ function ShiprocketActivityTracker({ activities: rawActivities, isSyncing }) {
   const getTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
 
   return (
-    <div className="shiprocket-tracker">
+    <div className="order-tracker">
       {activities.map((a, i) => (
-        <div key={i} className={`sr-step ${a.status?.toLowerCase().includes('delivered') ? 'delivered' : ''}`}>
-          <div className="sr-dot-line">
-            <div className="sr-dot" />
-            {i < activities.length - 1 && <div className="sr-line" />}
+        <div key={i} className={`tr-step ${a.status?.toLowerCase().includes('delivered') ? 'delivered' : ''}`}>
+          <div className="tr-dot-line">
+            <div className="tr-dot" />
+            {i < activities.length - 1 && <div className="tr-line" />}
           </div>
-          <div className="sr-info">
-            <div className="sr-label-row">
-              <span className="sr-status">{formatStatus(a.status)}</span>
-              <span className="sr-date">{getDay(a.date)}</span>
+          <div className="tr-info">
+            <div className="tr-label-row">
+              <span className="tr-status">{formatStatus(a.status)}</span>
+              <span className="tr-date">{getDay(a.date)}</span>
             </div>
-            <p className="sr-activity">{a.activity || (a.status?.toLowerCase().includes('delivered') ? 'Order successfully delivered.' : '')}</p>
-            <p className="sr-meta">
+            <p className="tr-activity">{a.activity || (a.status?.toLowerCase().includes('delivered') ? 'Order successfully delivered.' : '')}</p>
+            <p className="tr-meta">
               {getDay(a.date)} - {getTime(a.date)}
               {a.location && <span> · {a.location}</span>}
             </p>

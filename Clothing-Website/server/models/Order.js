@@ -14,12 +14,9 @@ const orderSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.Mixed }, // Snapshot of { name, customerId }
   items: [{ type: mongoose.Schema.Types.Mixed }],
   shippingAddress: { type: mongoose.Schema.Types.Mixed },
-  shiprocketOrderId: { type: String },
-  shiprocketShipmentId: { type: String },
   trackingStatus: { type: String, default: 'Unshipped' },
   trackingLink: { type: String },
-  trackingActivities: [mongoose.Schema.Types.Mixed], // Persist live scans
-  shiprocketError: { type: String }, // NEW: Saves exact error rejection
+  trackingActivities: [mongoose.Schema.Types.Mixed], 
   giftWrapping: { type: Boolean, default: false },
   isGift: { type: Boolean, default: false },
   giftVideoUrl: { type: String },

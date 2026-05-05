@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { auth } from '../../firebase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../../styles/myorders/WriteReview.css';
 import { authFetch } from '../../utils/authFetch';
@@ -124,7 +123,15 @@ export default function WriteReview() {
 
     setError('');
     setIsSubmitting(true);
-    const userId = auth.currentUser?.uid || '';
+    
+    let userId = '';
+    const userJson = localStorage.getItem('clientUser');
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        userId = user.customerId;
+      } catch (e) {}
+    }
 
     const fd = new FormData();
     fd.append('name', name.trim());

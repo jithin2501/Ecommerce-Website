@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const admin = require('../conf/firebase');
 
 const protect = (req, res, next) => {
   const token = req.cookies.adminToken || (req.headers.authorization && req.headers.authorization.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : null);
@@ -22,25 +21,6 @@ const superAdminOnly = (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Access denied. Superadmin only.' });
   }
   next();
-};
-
-
-
-const verifyFirebaseToken = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ success: false, message: 'No Firebase token provided.' });
-  }
-
-  const token = authHeader.split(' ')[1];
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.firebaseUid = decodedToken.uid;
-    next();
-  } catch (error) {
-    console.error('❌ Firebase token verification failed:', error.message);
-    return res.status(401).json({ success: false, message: 'Invalid or expired Firebase token.' });
-  }
 };
 
 const protectClient = async (req, res, next) => {
@@ -77,15 +57,15 @@ const requireOwnership = (req, res, next) => {
     return res.status(400).json({ success: false, message: 'Resource UID missing for ownership check.' });
   }
 
-  // Allow if Firebase UID matches OR if Client customerId matches
-  if (req.firebaseUid === resourceUid || req.clientUid === resourceUid) {
+  // Allow if Client customerId matches
+  if (req.clientUid === resourceUid) {
     return next();
   }
 
   return res.status(403).json({ success: false, message: 'Forbidden: You do not own this resource.' });
 };
 
-// Allows access if EITHER a valid Admin JWT OR a valid Firebase token is present
+// Allows access if EITHER a valid Admin JWT OR a valid Client token is present
 const anyAuth = async (req, res, next) => {
   const token = req.cookies.adminToken || (req.headers.authorization && req.headers.authorization.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : null);
 
@@ -99,12 +79,19 @@ const anyAuth = async (req, res, next) => {
     req.admin = decoded;
     return next();
   } catch (err) {
-    // If not Admin, try Firebase
+    // If not Admin, try Client Auth
     try {
-      const decodedToken = await admin.auth().verifyIdToken(token);
-      req.firebaseUid = decodedToken.uid;
-      return next();
-    } catch (fbErr) {
+      const decodedClient = jwt.verify(token, process.env.JWT_SECRET);
+      const ClientUser = require('../models/ClientUser');
+      const currentUser = await ClientUser.findById(decodedClient.id);
+      
+      if (currentUser) {
+        req.user = currentUser;
+        req.clientUid = currentUser.customerId;
+        return next();
+      }
+      return res.status(401).json({ success: false, message: 'Invalid token.' });
+    } catch (clientErr) {
       return res.status(401).json({ success: false, message: 'Invalid token.' });
     }
   }
@@ -114,7 +101,6 @@ module.exports = {
   protect,
   protectClient,
   superAdminOnly,
-  verifyFirebaseToken,
   requireOwnership,
   anyAuth
 };

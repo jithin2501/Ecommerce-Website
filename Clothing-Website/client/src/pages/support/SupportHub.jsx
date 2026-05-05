@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/sidebar/Sidebar';
 import SEO from '../../components/SEO';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import '../../styles/support/SupportHub.css';
 
 const API = '/api';
@@ -21,13 +19,16 @@ export default function SupportHub() {
   const [selectedOrderId, setSelectedOrderId] = useState(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (fbUser) => {
-      if (fbUser) {
+    const fetchOrders = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+
+      if (token && userJson) {
         try {
-          const idToken = await fbUser.getIdToken();
-          const res = await fetch(`${API}/payment/user-orders/${fbUser.uid}`, {
+          const user = JSON.parse(userJson);
+          const res = await fetch(`${API}/payment/user-orders/${user.customerId}`, {
             headers: {
-              'Authorization': `Bearer ${idToken}`
+              'Authorization': `Bearer ${token}`
             }
           });
           const data = await res.json();
@@ -45,8 +46,11 @@ export default function SupportHub() {
         setOrders([]);
       }
       setLoading(false);
-    });
-    return () => unsub();
+    };
+
+    fetchOrders();
+    window.addEventListener('client_user_updated', fetchOrders);
+    return () => window.removeEventListener('client_user_updated', fetchOrders);
   }, []);
 
   return (

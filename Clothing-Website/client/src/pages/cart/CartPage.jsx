@@ -7,8 +7,6 @@ import GiftVideoManager from '../../components/cart/GiftVideoManager';
 import CartYouMightAlsoLike from '../../components/cart/CartYouMightAlsoLike';
 import EmptyCart from '../../components/cart/EmptyCart';
 import AddressSidebar from '../../components/collectiondetails/AddressSidebar';
-import { auth } from '../../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { MapPin } from 'lucide-react';
 import '../../styles/cart/CartPage.css';
 
@@ -41,13 +39,16 @@ export default function CartPage() {
 
   /* ── Load address on mount / auth change ── */
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
+    const fetchAddresses = async () => {
+      const token = localStorage.getItem('clientToken');
+      const userJson = localStorage.getItem('clientUser');
+
+      if (token && userJson) {
         try {
-          const idToken = await user.getIdToken();
-          const res = await fetch(`${API}/client-auth/addresses/${user.uid}`, {
+          const user = JSON.parse(userJson);
+          const res = await fetch(`${API}/client-auth/addresses/${user.customerId}`, {
             headers: {
-              'Authorization': `Bearer ${idToken}`
+              'Authorization': `Bearer ${token}`
             }
           });
           const data = await res.json();
@@ -81,7 +82,7 @@ export default function CartPage() {
         }
       }
 
-      // Guest fallback
+      // Guest fallback or not logged in
       const savedSelection = localStorage.getItem(SELECTED_KEY) || localStorage.getItem(ACTIVE_KEY);
       if (savedSelection) {
         try {
@@ -99,8 +100,11 @@ export default function CartPage() {
           localStorage.setItem(ACTIVE_KEY, JSON.stringify(defAddr));
         }
       } catch (e) {}
-    });
-    return () => unsub();
+    };
+
+    fetchAddresses();
+    window.addEventListener('client_user_updated', fetchAddresses);
+    return () => window.removeEventListener('client_user_updated', fetchAddresses);
   }, []);
 
   /* ── Live sync: clear selected address if it was deleted ── */
@@ -242,11 +246,11 @@ export default function CartPage() {
             giftCost={giftCost}
             tax={tax}
             total={total}
-            user={auth.currentUser ? {
-              uid: auth.currentUser.uid,
-              name: userInfo?.name || auth.currentUser.displayName,
-              email: userInfo?.email || auth.currentUser.email,
-              phone: userInfo?.phone || auth.currentUser.phoneNumber,
+            user={userInfo ? {
+              uid: userInfo.customerId,
+              name: userInfo.name,
+              email: userInfo.email,
+              phone: userInfo.phone,
             } : null}
             cartItems={cartItems}
             selectedAddress={selectedAddress}

@@ -3,30 +3,29 @@ const router = express.Router();
 const paymentCtrl = require('../controllers/paymentController');
 const {
     protect,
-    superAdminOnly,
-    verifyFirebaseToken,
+    protectClient,
     requireOwnership,
     anyAuth
 } = require('../middleware/authMiddleware');
 const { paymentLimiter } = require('../middleware/rateLimiter');
 
-// Rate-limited & Protected: Ensures only authenticated Firebase users can create/verify payments
-router.post('/create-order', verifyFirebaseToken, paymentLimiter, paymentCtrl.createOrder);
-router.post('/verify-payment', verifyFirebaseToken, paymentLimiter, paymentCtrl.verifyPayment);
-router.post('/calculate-summary', verifyFirebaseToken, paymentLimiter, paymentCtrl.calculateSummary);
+// Rate-limited & Protected: Ensures only authenticated users can create/verify payments
+router.post('/create-order', protectClient, paymentLimiter, paymentCtrl.createOrder);
+router.post('/verify-payment', protectClient, paymentLimiter, paymentCtrl.verifyPayment);
+router.post('/calculate-summary', protectClient, paymentLimiter, paymentCtrl.calculateSummary);
 router.get('/gift/:hash', paymentCtrl.getOrderByGiftHash);
 
 // Admin-only — protected by JWT (Allowed for all admins with permission)
 router.get('/orders', protect, paymentCtrl.getAllOrders);
 
-// User-specific order history — Protected by Firebase Token + Ownership Check
-router.get('/user-orders/:uid', verifyFirebaseToken, requireOwnership, paymentCtrl.getUserOrders);
-router.get('/orders/:orderId', verifyFirebaseToken, paymentCtrl.getOrderById);
+// User-specific order history — Protected by Client Token + Ownership Check
+router.get('/user-orders/:uid', protectClient, requireOwnership, paymentCtrl.getUserOrders);
+router.get('/orders/:orderId', protectClient, paymentCtrl.getOrderById);
 
-// Tracking — Allows BOTH Admin JWT (for dashboard) and Firebase Token (for customer)
+// Tracking — Allows BOTH Admin JWT (for dashboard) and Client Token (for customer)
 router.get('/track/:orderId', anyAuth, paymentCtrl.syncTrackingStatus);
 
-// Admin manual sync (Allowed for all admins with permission)
-router.post('/manual-sync-sr/:orderId', protect, paymentCtrl.manualSyncToShiprocket);
+// Admin mark as delivered
+router.post('/mark-delivered/:orderId', protect, paymentCtrl.markAsDelivered);
 
 module.exports = router;
