@@ -422,11 +422,11 @@
 }
 
 .od-star.active {
-  color: #22C55E;
+  color: #BE4761; /* Brand Pink */
 }
 
 .od-star:hover {
-  color: #22C55E;
+  color: #BE4761; /* Brand Pink */
 }
 
 .od-write-review-btn {

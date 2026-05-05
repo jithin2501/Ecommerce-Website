@@ -42,7 +42,7 @@
 }
 
 .pr-stars {
-  color: #E8A020;
+  color: var(--accent-clay);
   font-size: 1rem;
   letter-spacing: 2px;
 }
@@ -83,7 +83,7 @@
 
 .pr-bar-fill {
   height: 100%;
-  background: var(--accent-clay, #C17B5C);
+  background: var(--accent-clay);
   border-radius: 50px;
   transition: width 0.6s ease;
 }
@@ -149,7 +149,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #C17B5C;
+  background: var(--accent-clay);
   color: white;
   display: flex;
   align-items: center;
@@ -208,7 +208,7 @@
 .pr-view-more-btn {
   background: none;
   border: none;
-  color: var(--accent-clay, #C17B5C);
+  color: var(--accent-clay);
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
@@ -220,7 +220,7 @@
 }
 
 .pr-view-more-btn:hover {
-  border-bottom-color: var(--accent-clay, #C17B5C);
+  border-bottom-color: var(--accent-clay);
   opacity: 0.8;
 }
 
