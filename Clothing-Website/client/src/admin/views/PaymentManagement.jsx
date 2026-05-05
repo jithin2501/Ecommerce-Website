@@ -19,9 +19,12 @@ export default function PaymentManagement() {
   const [printingOrder, setPrintingOrder] = useState(null);
 
   const handlePrint = (order) => {
+    const originalTitle = document.title;
+    document.title = ''; // Empty title to remove browser header text
     setPrintingOrder(order);
     setTimeout(() => {
       window.print();
+      document.title = originalTitle;
       // Reset printing order after a short delay so it doesn't stay in the DOM
       setTimeout(() => setPrintingOrder(null), 1000);
     }, 500);
