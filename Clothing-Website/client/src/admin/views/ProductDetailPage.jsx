@@ -536,7 +536,7 @@ export default function ProductDetailPage() {
             {specifications.map(s => (
               <div key={s.id} className="pdp-kv-grid">
                 <input className="pdp-kv-input" placeholder="e.g. Brand" value={s.label} onChange={e => spec.update(s.id, 'label', e.target.value)} />
-                <input className="pdp-kv-input" placeholder="e.g. Sumathi Trends" value={s.value} onChange={e => spec.update(s.id, 'value', e.target.value)} />
+                <input className="pdp-kv-input" placeholder="e.g. Trendora Trends" value={s.value} onChange={e => spec.update(s.id, 'value', e.target.value)} />
                 <button type="button" className="pdp-row-remove" onClick={() => spec.remove(s.id)}>✕</button>
               </div>
             ))}
