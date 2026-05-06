@@ -146,6 +146,36 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+/* ── Password Toggle ── */
+.ul-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ul-password-wrap input {
+  padding-right: 48px !important; /* Space for the eye icon */
+}
+
+.ul-password-toggle {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  z-index: 5;
+}
+
+.ul-password-toggle:hover {
+  color: #1e293b;
+}
+
 /* ── Phone wrapper: prefix INSIDE the input row ── */
 .ul-phone-wrap {
   display: flex;
