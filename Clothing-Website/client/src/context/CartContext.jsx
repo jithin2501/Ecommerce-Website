@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { authFetch } from '../utils/authFetch';
 
 const CartContext = createContext();
 
@@ -15,80 +16,101 @@ function loadCart() {
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(loadCart);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Persist to localStorage whenever cart changes
+  // 1. Initial Load & Listen for User Updates
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
-
-    // Sync with server if logged in
-    const token = localStorage.getItem('clientToken');
-    const userJson = localStorage.getItem('clientUser');
-    if (token && userJson) {
-      try {
-        const user = JSON.parse(userJson);
-        const uid = user.customerId || (user.uids && user.uids[0]);
-        if (uid) {
-          // Map 'id' to 'productId' for server schema compatibility
-          const syncData = cartItems.map(item => ({
-            productId: item.id,
-            name: item.name,
-            img: item.img,
-            price: item.price,
-            size: item.size,
-            color: item.color,
-            qty: item.qty,
-            stock: item.stock
-          }));
-
-          fetch('/api/client-auth/sync-cart', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ uid, cart: syncData })
-          }).catch(err => console.error("❌ Failed to sync cart:", err));
-        }
-      } catch (e) {
-        console.error("❌ Error parsing user for cart sync:", e);
-      }
-    }
-  }, [cartItems]);
-
-  // Listen for user login/logout to sync cart
-  useEffect(() => {
-    const handleUserUpdate = () => {
+    const fetchUserCart = async () => {
+      const token = localStorage.getItem('clientToken');
       const userJson = localStorage.getItem('clientUser');
-      if (userJson) {
+
+      if (token && userJson) {
         try {
           const user = JSON.parse(userJson);
-          if (user.cart && Array.isArray(user.cart)) {
-            // Restore cart from user profile upon login
-            // Map 'productId' back to 'id' for frontend compatibility
-            const mappedCart = user.cart.map(item => ({
+          const identifier = user.customerId || user._id || (user.uids && user.uids[0]);
+          
+          const res = await authFetch(`/api/client-auth/profile/${identifier}`);
+          const data = await res.json();
+          
+          if (data.success && data.user) {
+            const serverCart = (data.user.cart || []).map(item => ({
               ...item,
-              id: item.productId || item.id
+              id: item.productId || item.id // Map back to frontend 'id'
             }));
-            setCartItems(mappedCart);
+            
+            // Update local state from server
+            setCartItems(serverCart);
           }
-        } catch (e) {
-          console.error("❌ Error parsing user cart:", e);
+        } catch (err) {
+          console.error('❌ Failed to fetch user cart:', err);
+        } finally {
+          setIsLoaded(true);
         }
       } else {
-        // User logged out, clear cart
+        // Logged out or no user session
         setCartItems([]);
         localStorage.removeItem(STORAGE_KEY);
+        setIsLoaded(true);
       }
     };
 
+    fetchUserCart();
+
+    const handleUserUpdate = (e) => {
+      // If it's a storage event, only respond if auth keys changed
+      if (e && e.type === 'storage' && e.key !== 'clientToken' && e.key !== 'clientUser') return;
+      fetchUserCart();
+    };
+
     window.addEventListener('client_user_updated', handleUserUpdate);
-    window.addEventListener('storage', handleUserUpdate); // Handle multi-tab logout
+    window.addEventListener('storage', handleUserUpdate);
 
     return () => {
       window.removeEventListener('client_user_updated', handleUserUpdate);
       window.removeEventListener('storage', handleUserUpdate);
     };
   }, []);
+
+  // 2. Persist to localStorage and Sync to Server
+  useEffect(() => {
+    // Save to local storage for persistence across reloads
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
+
+    // Only sync to server if we've finished the initial load 
+    // (to avoid overwriting server cart with empty local state on mount)
+    const token = localStorage.getItem('clientToken');
+    const userJson = localStorage.getItem('clientUser');
+    
+    if (!isLoaded || !token || !userJson) return;
+
+    const syncTimeout = setTimeout(async () => {
+      try {
+        const user = JSON.parse(userJson);
+        const uid = user.customerId || user._id || (user.uids && user.uids[0]);
+        if (!uid) return;
+
+        const syncData = cartItems.map(item => ({
+          productId: item.id,
+          name: item.name,
+          img: item.img,
+          price: item.price,
+          size: item.size,
+          color: item.color,
+          qty: item.qty,
+          stock: item.stock
+        }));
+
+        await authFetch('/api/client-auth/sync-cart', {
+          method: 'POST',
+          body: JSON.stringify({ uid, cart: syncData })
+        });
+      } catch (err) {
+        console.error('❌ Failed to sync cart:', err);
+      }
+    }, 1500); // Debounce sync
+
+    return () => clearTimeout(syncTimeout);
+  }, [cartItems, isLoaded]);
 
   const addToCart = (product) => {
     // Expected product: { id, name, price, size, color, img, stock }
@@ -144,7 +166,7 @@ export function CartProvider({ children }) {
   };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, updateQty, removeItem, clearCart, cartCount, subtotal }}>
+    <CartContext.Provider value={{ cartItems, addToCart, updateQty, removeItem, clearCart, cartCount, subtotal, isLoaded }}>
       {children}
     </CartContext.Provider>
   );

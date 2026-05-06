@@ -150,7 +150,11 @@ export default function CollectionDetailPage() {
 
     checkAuth();
     window.addEventListener('storage', checkAuth);
-    return () => window.removeEventListener('storage', checkAuth);
+    window.addEventListener('client_user_updated', checkAuth);
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('client_user_updated', checkAuth);
+    };
   }, []);
 
   const handleZoomChange  = useCallback((state) => setZoomState(state), []);
