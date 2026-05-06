@@ -11,81 +11,83 @@ router.post('/generate-description', isAdmin, async (req, res) => {
   const { name, category, subCategory, highlights } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
-  // ... [fallback logic kept] ...
+  if (!apiKey || apiKey.length < 10) {
+    return res.status(400).json({ 
+      success: false, 
+      error: "Google Gemini API Key is missing or invalid in the server .env file." 
+    });
+  }
+
+  // ── SMART FALLBACK TEMPLATE ──
   const getFallbackDescription = () => {
     const opening = [
-      `Discover the perfect blend of elegance and comfort with our ${name}.`,
-      `Elevate your little one's style with the exquisite ${name} from Trendora Trends.`,
-      `Make every moment special with our premium ${name}, a standout piece in our latest collection.`
+      `Elevate your little one's wardrobe with the enchanting ${name} from our latest Trendora Trends collection.`,
+      `Discover the perfect combination of timeless style and modern comfort with the ${name}, designed specifically for your child's special moments.`,
+      `The ${name} is a standout piece in our ${category} range, offering unparalleled quality and a sophisticated look for any occasion.`
     ];
-    const middle = `Expertly crafted as part of our ${category}${subCategory ? ` (${subCategory})` : ''} collection, this piece is designed to provide unparalleled comfort while maintaining a sophisticated look.`;
+    const middle = `Carefully tailored as part of our premium ${category}${subCategory ? ` (${subCategory})` : ''} line, this garment ensures all-day comfort while maintaining its elegant silhouette.`;
     const featureSection = highlights && highlights.length > 0 
       ? `\n\nKey Features:\n${highlights.map(h => `• ${h.label}: ${h.value}`).join('\n')}`
-      : '';
-    const closing = `\n\nExperience the premium quality and timeless design that Trendora Trends is known for. Perfect for any occasion.`;
-
+      : `\n\nKey Features:\n• Premium quality fabrics\n• Comfortable and stylish fit\n• Exquisite attention to detail`;
+    const closing = `\n\nExperience the superior craftsmanship and distinctive design of Trendora Trends. A must-have addition for your little one.`;
+    
     return opening[Math.floor(Math.random() * opening.length)] + " " + middle + featureSection + closing;
   };
 
-  const mockDescription = getFallbackDescription();
+  console.log(`[AI] Requesting AI generation for: "${name}"`);
 
-  if (!apiKey || apiKey.length < 10) {
-    console.log("[AI] No API key found or key too short.");
-    return res.json({ success: true, description: mockDescription });
-  }
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    
+    // Attempting your high-access models first
+    const modelNames = ["gemini-2.0-flash", "gemini-flash-latest", "gemini-pro-latest"];
 
-  console.log(`[AI] Starting generation for "${name}" using key length: ${apiKey.length}`);
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  
-  // Flash 1.5 is the recommended model for this use case
-  const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
-
-  for (const modelName of modelNames) {
-    try {
-      console.log(`[AI] Attempting model: ${modelName} (API v1)`);
-      // Explicitly using v1 API version as v1beta might be causing 404s for some keys
-      const model = genAI.getGenerativeModel({ model: modelName }, { apiVersion: 'v1' });
-      
-      const prompt = `
-        You are a premium copywriter for "Trendora Trends", a high-end kids' clothing brand.
-        Write a detailed, engaging, and professional product description for the following item:
+    for (const modelName of modelNames) {
+      try {
+        console.log(`[AI] Attempting model: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
         
-        Product: ${name}
-        Category: ${category}
-        Sub-Category: ${subCategory || 'Premium Collection'}
-        Highlights: ${highlights && highlights.length > 0 ? highlights.map(h => `${h.label}: ${h.value}`).join(', ') : 'Premium quality, stylish design, comfortable fit'}
-        
-        Requirements:
-        1. Start with an inviting and stylish opening paragraph.
-        2. Create a "Why You'll Love It" section highlighting the comfort and design.
-        3. Include a bulleted "Product Highlights" section using the provided highlights.
-        4. Maintain a sophisticated, premium, and parent-friendly tone.
-        5. Keep the total length around 100-150 words.
-        6. Do not use any placeholders or generic filler text.
-      `;
+        const prompt = `
+          You are a professional product copywriter for "Trendora Trends", a premium kids' clothing brand.
+          Write a detailed, engaging, and professional product description for:
+          
+          Product: ${name}
+          Category: ${category}
+          Sub-Category: ${subCategory || 'Premium Collection'}
+          Highlights: ${highlights && highlights.length > 0 ? highlights.map(h => `${h.label}: ${h.value}`).join(', ') : 'Premium quality, stylish design'}
+          
+          Requirements:
+          1. Write a stylish opening paragraph.
+          2. Create a "Why You'll Love It" section.
+          3. Include a bulleted "Product Details" section.
+          Tone: Sophisticated, premium, and trustworthy.
+          Length: Around 120 words.
+        `;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-      if (text) {
-        console.log(`[AI] Success using ${modelName}`);
-        return res.json({ success: true, description: text.trim() });
-      }
-    } catch (error) {
-      console.error(`[AI] Error with ${modelName}:`, error.message);
-      if (error.response?.data) {
-        console.error(`[AI] Detailed Error:`, JSON.stringify(error.response.data));
+        if (text) {
+          console.log(`[AI] Success using ${modelName}`);
+          return res.json({ success: true, description: text.trim() });
+        }
+      } catch (innerError) {
+        console.error(`[AI] ${modelName} failed:`, innerError.message);
       }
     }
+  } catch (outerError) {
+    console.error("[AI] Fatal setup error:", outerError.message);
   }
 
-  console.log("[AI] All models failed. Returning fallback.");
+  // If we reach here, AI is blocked (Rate Limited) or down. 
+  // We return the high-quality fallback so the user experience isn't broken.
+  console.log("[AI] All models failed or rate-limited. Using smart fallback.");
   return res.json({ 
     success: true, 
-    description: mockDescription,
-    note: "Using enhanced smart template fallback."
+    description: getFallbackDescription(),
+    isFallback: true,
+    note: "AI service is currently at its limit. Providing a premium smart template instead."
   });
 });
 
