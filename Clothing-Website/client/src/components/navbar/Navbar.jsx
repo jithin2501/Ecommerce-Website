@@ -209,6 +209,8 @@ export default function Navbar() {
     localStorage.removeItem('trendora_selected_address');
     setUser(null);
     setShowDropdown(false);
+    // Dispatch event to notify CartContext and other components
+    window.dispatchEvent(new Event('client_user_updated'));
     navigate('/');
   };
 
@@ -272,7 +274,7 @@ export default function Navbar() {
           <Link to="/cart" className="action-item">
             <div className="icon-wrapper">
               <ShoppingCart size={18} />
-              {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+              {user && cartCount > 0 && <span className="cart-count">{cartCount}</span>}
             </div>
             <span>CART</span>
           </Link>
@@ -339,9 +341,9 @@ export default function Navbar() {
           <Link to="/cart" className="sidebar-action-item" onClick={() => setIsSidebarOpen(false)}>
             <div className="sidebar-icon-wrapper">
               <ShoppingCart size={20} />
-              {cartCount > 0 && <span className="sidebar-cart-count">{cartCount}</span>}
+              {user && cartCount > 0 && <span className="sidebar-cart-count">{cartCount}</span>}
             </div>
-            <span>Shopping Cart {cartCount > 0 && `(${cartCount})`}</span>
+            <span>Shopping Cart {user && cartCount > 0 && `(${cartCount})`}</span>
           </Link>
         </div>
 

@@ -71,6 +71,14 @@ export function WishlistProvider({ children }) {
     };
 
     fetchWishlist();
+
+    window.addEventListener('client_user_updated', fetchWishlist);
+    window.addEventListener('storage', fetchWishlist);
+
+    return () => {
+      window.removeEventListener('client_user_updated', fetchWishlist);
+      window.removeEventListener('storage', fetchWishlist);
+    };
   }, []);
 
   // 3. Sync wishlist to DB whenever it changes (only for logged in users)
