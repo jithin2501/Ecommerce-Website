@@ -13,6 +13,9 @@ import { authFetch } from '../../utils/authFetch';
 
 const API = '/api';
 
+const nameToSlug = (name) => 
+  name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
 const slugToName = (slug) => slug.replace(/-/g, ' ').toLowerCase();
 
 function scrollToSectionOnPage(sectionId) {
@@ -181,8 +184,8 @@ export default function CollectionDetailPage() {
           const res  = await fetch(`${API}/products`);
           const data = await res.json();
           if (data.success) {
-            const needle  = slugToName(productSlug);
-            const matched = data.data.find(p => p.name.toLowerCase() === needle);
+            const needle = productSlug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            const matched = data.data.find(p => nameToSlug(p.name) === needle);
             if (matched) resolvedId = matched._id;
           }
         }

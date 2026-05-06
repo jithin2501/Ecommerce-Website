@@ -76,11 +76,13 @@ const getFeaturedProducts = async (req, res) => {
     if (settings.autoRotateProducts) {
       const LIMITS = { youMightAlsoLike: 4, cartAlsoLike: 4, bestSelling: 10, newArrivals: 4 };
       const limit = LIMITS[section] || 4;
-      const dateStr = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      // Using YYYY-MM-DDTHH format to ensure rotation happens every hour
+      const hourSeed = now.toISOString().split(':')[0]; 
       const products = await Product.find({ isActive: true }).lean();
       const shuffled = products.sort((a, b) => {
-        const hashA = stringHash(a._id.toString() + dateStr + section);
-        const hashB = stringHash(b._id.toString() + dateStr + section);
+        const hashA = stringHash(a._id.toString() + hourSeed + section);
+        const hashB = stringHash(b._id.toString() + hourSeed + section);
         return hashA - hashB;
       });
       return res.json({ success: true, data: shuffled.slice(0, limit) });

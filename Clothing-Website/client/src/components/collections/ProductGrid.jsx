@@ -278,7 +278,7 @@ export default function ProductGrid({
           return (
             <Link
               key={product._id || product.id}
-              to={`/collections/${product.ageGroup || toAgeGroup(product.age)}/${toSlug(product.name)}`}
+              to={`/collections/${Array.isArray(product.ageGroup) ? product.ageGroup[0] : (product.ageGroup || toAgeGroup(product.age))}/${toSlug(product.name)}`}
               className="pg-card"
             >
               <div className={`pg-img-wrap ${product.stock <= 0 ? 'pg-out-of-stock' : ''}`}>

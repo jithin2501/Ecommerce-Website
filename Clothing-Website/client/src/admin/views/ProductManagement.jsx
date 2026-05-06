@@ -243,14 +243,16 @@ export default function ProductManagement() {
 
   const getAutoFeatured = (pId, section) => {
     if (!isAutoRotate) return false;
-    const dateStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    // Using YYYY-MM-DDTHH format to ensure rotation happens every hour
+    const hourSeed = now.toISOString().split(':')[0]; 
     const limit = SECTION_LIMITS[section] || 4;
 
     const sorted = [...products]
       .filter(p => p.isActive)
       .sort((a, b) => {
-        const hA = stringHash(a._id + dateStr + section);
-        const hB = stringHash(b._id + dateStr + section);
+        const hA = stringHash(a._id + hourSeed + section);
+        const hB = stringHash(b._id + hourSeed + section);
         return hA - hB;
       });
 
