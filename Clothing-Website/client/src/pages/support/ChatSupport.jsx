@@ -203,8 +203,16 @@ export default function ChatSupport() {
         })), 
         time: now() 
       };
-      setMessages(prev => [...prev, newMsg]);
+      setMessages(prev => {
+        const next = [...prev, newMsg];
+        localStorage.setItem(sessionKey, JSON.stringify({ messages: next, step: step }));
+        return next;
+      });
       setInput('');
+      setMediaFiles([]);
+      
+      const ta = document.querySelector('.cs-input');
+      if (ta) ta.style.height = 'auto';
 
       // ✅ SUBMIT TO BACKEND
       const formData = new FormData();
@@ -228,10 +236,6 @@ export default function ChatSupport() {
         console.error("ChatSupport: Submit failed", err);
       }
 
-      setMediaFiles([]);
-      const ta = document.querySelector('.cs-input');
-      if (ta) ta.style.height = 'auto';
-      
       botReply(
         "We've received your details. Our support team will shortly call you to resolve this. Thank you for your patience! 😊",
         2000,
