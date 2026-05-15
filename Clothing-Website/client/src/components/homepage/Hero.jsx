@@ -3,17 +3,11 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import '../../styles/homepage/Hero.css';
 
-const avatarUrls = [
-  'https://i.pravatar.cc/100?u=11',
-  'https://i.pravatar.cc/100?u=22',
-  'https://i.pravatar.cc/100?u=33',
-];
 
 const PHRASES = [
   'Best Kidswear Bangalore',
   'Premium Kids Cloths',
   'Ages 0–12 Essentials',
-  'Loved by 2,400+ Parents',
   'Adventure-Ready Styles',
 ];
 
@@ -105,26 +99,12 @@ export default function Hero() {
               <ArrowRight size={18} />
             </Link>
 
-            <div className="trust-bar">
-              <div className="trust-avatars">
-                {avatarUrls.map((url, i) => (
-                  <div
-                    key={i}
-                    className="avatar-pill"
-                    style={{ backgroundImage: `url(${url})` }}
-                  />
-                ))}
-              </div>
-              <div className="trust-text">
-                <span>2,400+</span> Happy parents trust us
-              </div>
-            </div>
           </div>
 
           {/* Right: Visuals */}
           <div className="hero-visuals">
             <img
-              src="/images/homepage/hero.webp"
+              src="/images/homepage/hero.png"
               alt="Model"
               className="main-model"
             />

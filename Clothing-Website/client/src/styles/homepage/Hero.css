@@ -3,8 +3,8 @@
 ========================================================= */
 .hero-section {
   width: 100%;
-  padding: 0 0 40px;
-  margin-top: -40px;
+  padding: 1px 0;
+  margin-top: -20px;
   display: flex;
   align-items: flex-start;
 }
