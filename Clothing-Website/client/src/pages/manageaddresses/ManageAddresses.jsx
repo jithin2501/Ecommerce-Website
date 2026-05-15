@@ -241,6 +241,7 @@ export default function ManageAddresses() {
     setEditingId(null);
     setSaved(true);
     setShowForm(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setSaved(false), 2000);
   };
 
