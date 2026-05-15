@@ -28,7 +28,7 @@ export default function About() {
         <div className="about">
           <div className="about-visuals">
             <img
-              src="images/homepage/About.webp"
+              src="images/homepage/about.png"
               alt="About Trendora Trends"
               className="about-img"
             />

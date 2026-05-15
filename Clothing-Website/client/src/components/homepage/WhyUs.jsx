@@ -49,12 +49,9 @@ export default function WhyUs() {
             <div className="why-dot why-dot-2" />
             <div className="why-dot why-dot-3" />
             <img
-              src="./about.png"
+              src="images/homepage/why.png"
               alt="Why Choose Sumathi Trends"
               className="why-img"
-              onError={(e) => {
-                e.target.src = 'images/homepage/why.webp';
-              }}
             />
           </div>
         </div>
