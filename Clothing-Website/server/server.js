@@ -48,6 +48,7 @@ connectDB().then(() => {
 // ── CORS — only allow requests from our own frontend ──
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  process.env.RENDER_EXTERNAL_URL,
   ...(process.env.NODE_ENV !== 'production'
     ? ['http://localhost:3000', 'http://localhost:5173']
     : [])
@@ -91,7 +92,19 @@ app.use('/api/payment', paymentRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/ai', aiRouter);
 
-app.get('/', (req, res) => res.json({ message: 'Trendora Trends API running.' }));
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+  const path = require('path');
+  // Set static folder
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+
+  // Handle React Router page refreshes by serving index.html for all non-API routes
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../client', 'dist', 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => res.json({ message: 'Trendora Trends API running.' }));
+}
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
