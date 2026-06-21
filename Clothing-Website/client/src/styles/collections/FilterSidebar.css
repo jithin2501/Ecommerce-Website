@@ -236,3 +236,12 @@
   color: var(--accent-clay, #C17B5C);
   font-weight: 600;
 }
+
+@media (max-width: 768px) {
+  .filter-sidebar {
+    width: 100% !important;
+    max-width: 280px !important;
+    margin: 0 auto 2rem !important;
+    align-self: center !important;
+  }
+}
