@@ -93,7 +93,7 @@ app.use('/api/support', supportRouter);
 app.use('/api/ai', aiRouter);
 
 // Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production' || process.env.RENDER === 'true') {
   const path = require('path');
   // Set static folder
   app.use(express.static(path.join(__dirname, '../client/dist')));
