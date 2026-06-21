@@ -18,8 +18,9 @@
 ---
 
 ## 📋 Table of Contents
-
+ 
 - [Overview](#-overview)
+- [Screenshots](#-screenshots)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
@@ -30,14 +31,40 @@
 - [Payment Flow](#-payment-flow)
 - [Admin Dashboard](#-admin-dashboard)
 - [Security](#-security)
-
+ 
+---
+ 
+## 🌟 Overview
+ 
+Trendora Trends is a full-stack e-commerce platform specialising in premium children's clothing. It supports end-to-end retail operations — from product discovery and cart management to Razorpay payment processing, order tracking, customer reviews, and a feature-rich admin dashboard.
+ 
+**Architecture:** React SPA (client) + Node.js/Express REST API (server) in a monorepo layout.
+ 
 ---
 
-## 🌟 Overview
+## 📸 Screenshots
 
-Trendora Trends is a full-stack e-commerce platform specialising in premium children's clothing. It supports end-to-end retail operations — from product discovery and cart management to Razorpay payment processing, order tracking, customer reviews, and a feature-rich admin dashboard.
+### 🌐 Client Portal
 
-**Architecture:** React SPA (client) + Node.js/Express REST API (server) in a monorepo layout.
+#### 🏠 Homepage / Landing Page
+![Homepage / Landing Page](Clothing-Website/client/assets/landing_page.png)
+
+#### 🛍️ Bestselling Products
+![Bestselling Products](Clothing-Website/client/assets/bestselling.png)
+
+#### 🗂️ Product Collections
+![Product Collections](Clothing-Website/client/assets/collection.png)
+
+#### 🔑 Client Login
+![Client Login](Clothing-Website/client/assets/clent_login.png)
+
+### 👑 Admin Dashboard
+
+#### 📦 Order Management
+![Order Management](Clothing-Website/client/assets/order_admin.png)
+
+#### ⭐ Review Moderation
+![Review Moderation](Clothing-Website/client/assets/review_admin.png)
 
 ---
 
