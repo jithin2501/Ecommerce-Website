@@ -1,0 +1,12 @@
+{
+  "name": "clothing-website-monorepo-root",
+  "version": "1.0.0",
+  "description": "Root package.json for monorepo deployment on Render",
+  "scripts": {
+    "install-client": "npm install --prefix Clothing-Website/client",
+    "install-server": "npm install --prefix Clothing-Website/server",
+    "build-client": "npm run build --prefix Clothing-Website/client",
+    "build": "npm run install-client && npm run build-client && npm run install-server",
+    "start": "npm start --prefix Clothing-Website/server"
+  }
+}
