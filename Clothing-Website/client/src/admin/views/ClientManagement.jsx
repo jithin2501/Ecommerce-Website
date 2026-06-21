@@ -339,21 +339,15 @@ export default function ClientManagement() {
           />
         </div>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ 
-            fontSize: '12px', 
-            color: '#64748b', 
-            fontWeight: '700', 
-            background: '#f8fafc', 
-            padding: '8px 16px', 
-            borderRadius: '10px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-            letterSpacing: '0.3px'
-          }}>
-            TOTAL CLIENTS: <span style={{ color: '#1e293b' }}>{stats?.total || 0}</span>
-            <span style={{ margin: '0 12px', color: '#e2e8f0' }}>|</span>
-            NEW TODAY: <span style={{ color: '#1e293b' }}>{stats?.newToday || 0}</span>
+        <div className="cm-toolbar-right">
+          <div className="cm-stats-card">
+            <span className="cm-stats-item">
+              TOTAL CLIENTS: <span className="cm-stats-value">{stats?.total || 0}</span>
+            </span>
+            <span className="cm-stats-divider">|</span>
+            <span className="cm-stats-item">
+              NEW TODAY: <span className="cm-stats-value">{stats?.newToday || 0}</span>
+            </span>
           </div>
           <select className="cm-date-filter" value={dateFilter} onChange={e => { setDateFilter(e.target.value); setPage(1); }}>
             <option value="all">Join Date: All Time</option>
